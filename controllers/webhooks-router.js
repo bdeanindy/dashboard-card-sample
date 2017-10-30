@@ -4,7 +4,6 @@ const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
 const Utility = require('./utility');
-const Reseller = require('./reseller');
 const Card = require('./card');
 
 /**
@@ -41,21 +40,24 @@ router.post('/callback', function(req, res) {
 
 	messages.push("\n");
 
+	// We only want to update the card data when we receive the appropriate events, in this case: `dasboard.card.update` events
 	if('dashboard.card.update' === req.body['event']) {
-		messages.push(`Received update dashboard card evt: ${req.body.data}`);
+		messages.push(`Received update dashboard card event`);
+		messages.push("\n");
+		messages.push(`Full Request Body: ${req.body}`);
+		messages.push("\n");
+		messages.push(`Request Body Data Property: ${req.body.data}`);
 		messages.push("\n");
 
+		let configObj = {};
+		// TODO: Bolt on the configObj properties from the event payload as context (so we update the correct dashboard card)
 
-		Reseller.getUser(function(err, data) {
+		/*
+		Card.populateCard(function(err, data) {
 			if(err) {
 				console.error(err, data);
 			} else {
 				//console.log('User Data: ', user);
-				/*
-				Card.populateCard(req.app.token, userId, siteId, cardId, testModeState, loginLink, function(err, data) {
-					
-				});
-				*/
 				res.render('reseller', {
 					title: 'Manage Reseller User',
 					resellerId: '',
@@ -65,6 +67,7 @@ router.post('/callback', function(req, res) {
 				});
 			}
 		});
+		*/
 	}
 
 	let message = messages.join("\n");

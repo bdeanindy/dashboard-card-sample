@@ -15,7 +15,16 @@ const weeblyAPI  = process.env.MY_API_BASE_URI;
 const clientId   = process.env.MY_CLIENT_ID;
 const secretKey  = process.env.MY_CLIENT_SECRET;
 
-Card.populateCard = function (token, userId, siteId, cardId, userEmail, testModeState, loginLink, sites, cb) {
+// TODO: Rewrite this using spread operator and ES6
+Card.populateCard = function (params, cb) {
+    let token = params.token;
+    let userId = params.userId;
+    let siteId = params.siteId;
+    let cardId = params.cardId;
+    let userEmail = params.userEmail;
+    let testModeState = params.testModeState;
+    let loginLink = params.loginLink;
+    let sites = params.sites;
 
     let cardData = [
         {
