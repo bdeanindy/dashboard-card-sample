@@ -48,8 +48,8 @@ While registering your new Weebly App, give it the name "Dashboard Card", and se
 
 Now that you have the code on your workstation, and your new Weebly App API Keys on-hand, you will need to update the code prior to deployment to Weebly.
 
-1. Open [manifest.json.tmpl](/manifest.json.tmpl) and replace `{{WEEBLY_CLIENT_ID}}` with the Weebly **Client ID** for the **Dashboard Card** app you created for the prerequisites.
-2. Once you save the changes, rename that file to `manifest.json` and save the changes.
+1. Open [manifest.json.tmpl](/manifest.json.tmpl) and replace/update all values wrapped in double-braces, such as: `{{WEEBLY_CLIENT_ID}}` with the appropriate values from the app you created as a prerequisite.
+2. Rename the file to `manifest.json` and save the changes.
 3. Next, open the [Weebly Developer Admin](https://www.weebly.com/developer-admin), login if you are not already, and click on the "Dashboard Card" app if it is not already open
 
 ## Deployment

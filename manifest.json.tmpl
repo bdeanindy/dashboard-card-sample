@@ -1,0 +1,48 @@
+{
+    "manifest": "1",
+    "client_id": "{{WEEBLY_CLIENT_ID}}",
+    "version": "{{REPLACE_WITH_YOUR_APP_VERSION_IN_SEMVER_FORMAT}}",
+    "callback_url": "https://{{REPLACE_WITH_YOUR_OAUTH_CALLBACK_URL}}",
+    "scopes": [
+        "read:user",
+        "read:site"
+    ],
+    "oauth_final_destination": "dashboard_card-sample",
+    "webhooks": {
+        "callback_url": "https://{{REPLACE_WITH_YOUR_WEBHOOKS_CALLBACK_URL}}",
+        "events": ["user.update","site.publish", "site.delete", "app.uninstall", "dashboard.card.update"]
+    },
+    "dashboard_cards": [
+        {
+            "name": "sample",
+            "version": "{{REPLACE_WITH_YOUR_SEMVER_ELEMENT_VERSION}}", // Should match app's `version` above
+            "label": "My Data",
+            "icon": "dashboard_card_assets/icon.svg",
+            "link": "https://{{YOUR_DASHBOARD_CARD_APP_DOMAIN_AND_TLD}}/setup/:jwt",
+            "default": [
+                {
+                    "type": "text",
+                    "title": "Dashboard Text Content",
+                    "value": "Text content value"
+                },
+                {
+                "type": "group",
+                "label": "Sites",
+                "components": [{
+                    "type": "link",
+                    "label": "A published site",
+                    "value": "Published",
+                    "description": "mysitedomain.com",
+                    "link": "https://{{YOUR_DASHBOARD_CARD_APP_DOMAIN_AND_TLD}}"
+                },
+                {
+                    "type": "link",
+                    "label": "An unpublished site",
+                    "description": "mysitedomain.com",
+                    "link": "https://{{YOUR_DASHBOARD_CARD_APP_DOMAIN_AND_TLD}}"
+                }]
+                }
+            ]
+        }
+    ]
+}
