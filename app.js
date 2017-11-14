@@ -1,29 +1,33 @@
 "use strict";
 
-// Sets up local development environment variables
+// `dotenv` To Enable Local DevMachine Environment Vars
 require('dotenv').config();
 
-const express = require('express');
-const path = require('path');
-const favicon = require('serve-favicon');
-const logger = require('morgan');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
+// EXPRESS APP DEPENDENCIES
+const express			= require('express');
+const path				= require('path');
+const favicon			= require('serve-favicon');
+const logger			= require('morgan');
+const cookieParser		= require('cookie-parser');
+const bodyParser		= require('body-parser');
 
-const WeeblyMiddleware = require('./middleware/weebly.js');
-const oauthRouter = require('./controllers/oauth-router.js');
-const webhooksRouter = require('./controllers/webhooks-router.js');
-// TODO: INCLUDE A NEW FETCH USER CONTROLLER TO HANDLE POPULATING THE WEBHOOK
+// CUSTOM WEEBLY MIDDLEWARE AND ROUTERS
+const WeeblyMiddleware		= require('./middleware/weebly.js');
+const oauthRouter			= require('./controllers/oauth-router.js');
+const webhooksRouter		= require('./controllers/webhooks-router.js');
+const dashboardCardsRouter	= require('./controllers/dashboard-cards-router.js');
 
+// BASE ROUTES
 const index = require('./routes/index');
 
+// Assign Express
 const app = express();
 
-// view engine setup
+// Setup View-Engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-// uncomment after placing your favicon in /public
+// Define Express Server Params
 app.use(favicon(path.join(__dirname, 'public', 'favicons/favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
@@ -31,11 +35,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Must mount base router before all else
 app.use('/', index);
 
 /**
  * Create a new instance of WeeblyMiddleware.
- * The `client_id` and `secret_key` can be set either here
+ * The `client_id` and `clientSecret` can be set either here
  * or in your environment variables (e.g. for Heroku)
  *
  * NOTE: If you have WEEBLY_CLIENT_ID and WEEBLY_SECRET_KEY
@@ -50,19 +55,20 @@ const wMiddleware = new WeeblyMiddleware({
 });
 
 /**
- * Requires Weebly API KEYS to be set to access
- */
+  * Mount My Custom Middleware and Routers to the App
+**/
 app.use('/oauth', wMiddleware, oauthRouter);
 app.use('/webhooks', wMiddleware, webhooksRouter);
+app.use('/cards', wMiddleware, dashboardCardsRouter);
 
-// catch 404 and forward to error handler
+// Catch 404 forwards to error handler
 app.use(function(req, res, next) {
   let err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
 
-// error handler
+// Error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;

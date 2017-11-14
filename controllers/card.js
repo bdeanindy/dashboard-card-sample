@@ -8,7 +8,11 @@ const Utility = require('./utility');
  * Weebly Card API Interface.
  */
 
-const Card = {};
+const Card = module.exports = (
+    [weeblyApiBaseUri, clientId, clientSecret] = [process.env.WEEBLY_API_BASE_URI, process.env.WEEBLY_CLIENT_ID, process.env.WEEBLY_CLIENT_SECRET],
+
+    {}) => {
+};
 
 // Vars
 const weeblyAPI  = process.env.MY_API_BASE_URI;
