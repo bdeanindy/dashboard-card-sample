@@ -45,7 +45,7 @@ Card.update = function (cardParams, cb) {
                 "type": "stat",
                 "label": "Clicks",
                 "primary_value": "0",
-                "primary_label": "Number of clicks on this component"
+                "primary_label": "Number of clicks on this component",
                 "link": "https://bdean-dashboard-card.herokuapp.com/cards/:jwt"
             },
             {
