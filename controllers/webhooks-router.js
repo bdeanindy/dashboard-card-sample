@@ -3,19 +3,17 @@
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const Utility = require('./utility');
+const HMAC_Util = require('../utils/hmac');
 const Card = require('./card');
 
 /**
  * Callback URL as specified in `manifest.json`
  */
 router.post('/callback', function(req, res) {
-	console.log(`\n`);
-	console.log(`POST request sent to '/webhooks/callback'`);
-	console.log(`\n`);
-	console.log(`Token: ${req.app.token}`);
-	console.log(`\n`);
-	//console.log(`Request.SOMETHING: ${req}\n`);
+	let messages = [];
+	messages.push(`POST request sent to '/webhooks/callback'\n`);
+	messages.push(`Token: ${req.app.token}\n`);
+
 	let comparisonObject = {
 		'client_id': req.body.client_id,
 		'client_version': req.body.client_version,
@@ -26,50 +24,55 @@ router.post('/callback', function(req, res) {
 
 	let comparisonString = JSON.stringify(comparisonObject);
 
-	let messages = [];
-
-	messages.push("\n");
-
-    // validate the hmac to see if its correct
-	if (!Utility.validateHmac(req.body.hmac, comparisonString, req.app.secretKey)) {
-		messages.push(`Fresh webhook was received, but the calculated hmac does not match what was passed.`);
+	// Verify the HMAC
+	if (!HMAC_Util.validateHmac(req.body.hmac, comparisonString, req.app.secretKey)) {
+		messages.push(`Fresh webhook received, but hmac does not match.`);
 		messages.push(`Expected ${req.body.hmac}`);
-		messages.push(`Calculated ${Utility.generateHmac(comparisonString)}`);
+		messages.push(`Calculated ${HMAC_Util.generateHmac(comparisonString)}`);
 	} else {
-		messages.push('A fresh webhook was recieved:');
+		messages.push('Fresh webhook event recieved:');
+		messages.push("\n");
 	}
 
-	//{\n  "client_id": "465279841",\n  "client_version": "1.0.1",\n  "event": "dashboard.card.update",\n  "timestamp": 1503029424,\n  "data": {\n    "user_id": "108919051",\n    "site_id": "247763368794122525",\n    "platform_app_id": "465279841",\n    "platform_dashboard_card_id": "528166133822187070",\n    "platform_dashboard_card_version": "1.0.1",\n    "name": "devrel-interview",\n    "language": "en"\n  },\n  "hmac": "832035fade569f7a28ff27fcd16556d74d4e02cc396bcf3692ebd6727376f142"\n}
 	messages.push(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
 	messages.push(`Data: ${JSON.stringify(req.body, null, 2)}`);
-
 	messages.push("\n");
 
 	// We only want to update the card data when we receive the appropriate events, in this case: `dasboard.card.update` events
 	if('dashboard.card.update' === req.body['event']) {
-		messages.push(`Received update dashboard card event`);
-		messages.push("\n");
-		messages.push(`Full Request Body: ${req.body}`);
-		messages.push("\n");
-		messages.push(`Request Body Data Property: ${req.body.data}`);
-		messages.push("\n");
+		//Dashboard Card Event Fields: ['user_id', 'site_id', 'platform_app_id', 'platform_dashboard_card_id', 'platform_dashboard_card_version', 'name', 'language'];
+		messages.push(`Received update dashboard card event\n`);
+		messages.push(`Full Request Body: ${req.body}\n`);
+		messages.push(`Request Body Data Property: ${req.body.data}\n`);
 
-		let configObj = {};
-		// TODO: Bolt on the configObj properties from the event payload as context (so we update the correct dashboard card)
+		let eventData = req.body['event'];
+		let sid = eventData.site_id;
+		let cid = eventData.card_id;
 
-		/*
-		Card.populateCard(function(err, data) {
+		// If the site doesn't already exist, add it to cache and create the card
+		if(!app.locals.siteCardCache[sid]) {
+			app.locals.siteCardCache[sid] = {};
+			app.locals.siteCardCache[sid][cid] = new Card({
+				card_id: eventData.platform_dashboard_card_id,
+				site_id: eventData.site_id,
+				token: req.app.token
+			});
+		}
+
+		// Get some more information about the card's state from the API
+		let currentCard = app.locals.siteCardCache[sid][cid].getDetails();
+		let tmpData = currentCard.card_data;
+
+		// TODO: Process and Update Dashboard Card Data According to Event Shape
+		// For this example, we are just going to bump the display count (since we only have defined a single data point in the `manifest.json` for this app)
+		messages.push(`Previous display count was: ${tmpData[0].value}`);
+		tmpData[0].value += 1;
+
+		currentCard.update(tmpData, function(err, data) {
 			if(err) {
 				console.error(err, data);
 			} else {
-				//console.log('User Data: ', user);
-				res.render('reseller', {
-					title: 'Manage Reseller User',
-					resellerId: '',
-					resellerTestMode: data.test_mode,
-					resellerEmail: data.email, 
-					resellerLanguage: data.language 
-				});
+				console.log('Card Update Response Data: ', data);
 			}
 		});
 		*/

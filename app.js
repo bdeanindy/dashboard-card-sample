@@ -60,6 +60,7 @@ const wMiddleware = new WeeblyMiddleware({
 app.use('/oauth', wMiddleware, oauthRouter);
 app.use('/webhooks', wMiddleware, webhooksRouter);
 app.use('/cards', wMiddleware, dashboardCardsRouter);
+app.locals.siteCardCache = {};
 
 // Catch 404 forwards to error handler
 app.use(function(req, res, next) {

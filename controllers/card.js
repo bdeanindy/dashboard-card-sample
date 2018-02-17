@@ -4,86 +4,84 @@ const crypto = require('crypto');
 const request = require('request');
 const Utility = require('./utility');
 
-/**
- * Weebly Card
- */
-
-const Card = module.exports = function(...options) {
-    // TODO: Bind options to this
-};
-
 // Vars
 const weeblyAPI  = process.env.MY_API_BASE_URI;
 const clientId   = process.env.MY_CLIENT_ID;
 const secretKey  = process.env.MY_CLIENT_SECRET;
 
-Card.update = function (cardParams, cb) {
-    // Outbound Weebly Card API Request Arguments
-    const hMethod        = 'PATCH';
-    const hAccept        = 'application/vnd.weebly.v1+json';
-    const hContentType   = 'application/json';
-    const hToken         = cardParams.token;
-
-    // Passthrough from the event data used in route below
-    let updateCardUrl   = `user/sites/${cardParams.site_id}/cards/${cardParams.platform_dashboard_card_id}`;
-    let token           = cardParams.token;
-    let userId          = cardParams.userId;
-    let siteId          = cardParams.siteId;
-    let cardId          = cardParams.cardId;
-
-    // Card Data - An array of dashboard componentsa (Array includes property values for each component on the card)
-    let updatedCardContent = [
-        {
-            "type": "text",
-            "title": "Dashboard Text Content",
-            "value": "Data for today..."
-        },
-        {
-            "type": "group",
-            "label": "Nom Nom Data",
-            "components": [{
-                "type": "stat",
-                "label": "Clicks",
-                "primary_value": "0",
-                "primary_label": "Number of clicks on this component",
-                "link": "https://bdean-dashboard-card.herokuapp.com/cards/:jwt"
-            },
-            {
-                "type": "text",
-                "title": "Some text content",
-                "value": ""
-            }]
-        }
-    ];
-
-    let payload = {
-        card_id: cardId,
-        card_data: updatedCardContent,
-        site_id: siteId,
-        user_id: userId
+/**
+ * Weebly Card
+ */
+const Card = module.exports = function(options = {}) {
+    this.cardId = options.card_id;
+    this.siteId = options.site_id;
+    this.token = options.token;
+    this.APIBaseURL = `${weeblyAPI}/user/sites/${siteId}/cards`;
+    this.headers: {
+        'X-Weebly-Access-Token': options.token,
+        'Content-Type': 'application/json',
+        'Accepts': 'application/vnd.weebly.v1+json'
     };
+};
 
-    let reqOpt= {
-        method: reqMethod,
-        url: this.weeblyAPI + updateCardUrl,
-        headers: {
-            'X-Weebly-Access-Token': hToken,
-            'Content-Type': hContentType,
-            'Accepts': hAccepts 
+// Retrieve the card details from Weebly Card API: https://dev.weebly.com/card-api.html 
+Card.getDetails = (cb) => {
+    request({
+            method: `GET`,
+            url: `${this.APIBaseURL}/${cardId}`,
+            headers: this.headers
         },
-    };
-
-    // Execute the request to update the card
-    request(reqOpts, function(err, response, body) {
-        if(err) {
-            console.error(err);
-            cb(err, data);
-        } else {
-            console.log('populateCard response body: ', body);
-            cb(null, body);
+        function(err, response, body) {
+            if(err) {
+                console.error(err);
+                cb(err, data);
+            } else {
+                console.log('getDetails response body: ', body);
+                cb(null, body);
+            }
         }
-    });
+    );
+};
 
+// TODO: NEEDS DATA IN REQUEST!!!
+Card.update = function (data, cb) {
+    request({
+            method: `PATCH`,
+            url: `${this.APIBaseURL}/${this.cardId}`,
+            headers: this.headers
+        },
+        function(err, response, body) {
+            if(err) {
+                console.error(err);
+                cb(err, data);
+            } else {
+                console.log('update response body: ', body);
+                cb(null, body);
+            }
+        }
+    );
+};
+
+// TODO: NEEDS DATA IN REQUEST!!!
+Card.toggleVisibility = function (visibile, cb) {
+    request({
+            method: `PATCH`,
+            url: `${this.APIBaseURL}/${this.cardId}`,
+            headers: this.headers,
+            data: {
+                hidden: visible;
+            }
+        },
+        function(err, response, body) {
+            if(err) {
+                console.error(err);
+                cb(err, data);
+            } else {
+                console.log('update response body: ', body);
+                cb(null, body);
+            }
+        }
+    );
 };
 
 /**
