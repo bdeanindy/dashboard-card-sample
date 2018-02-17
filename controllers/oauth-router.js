@@ -14,14 +14,6 @@ const Utility = require('./utility');
 router.get('/phase-one', function(req, res) {
 	console.log('Phase one of redirect has been initiated');
 
-	/** LIVE EXAMPLE: https://weebly-devrel-interview.herokuapp.com/oauth/phase-one?
-		user_id=108919051
-		timestamp=1503006751
-		site_id=247763368794122525
-		hmac=addd2db9b64f9965a4786c7ca094a56fccdd907e54342ee265022512deb426d0
-		version=1.0.0
-		callback_url=https%3A%2F%2Fwww.weebly.com%2Fapp-center%2Foauth%2Fauthorize
-	**/
 	const clientId = req.app.clientId;
 	const secretKey = req.app.secretKey;
 
