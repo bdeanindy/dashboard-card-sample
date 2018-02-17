@@ -2,7 +2,6 @@
 
 const crypto = require('crypto');
 const request = require('request');
-const Utility = require('./utility');
 
 // Vars
 const weeblyAPI  = process.env.MY_API_BASE_URI;
@@ -17,7 +16,7 @@ const Card = module.exports = function(options = {}) {
     this.siteId = options.site_id;
     this.token = options.token;
     this.APIBaseURL = `${weeblyAPI}/user/sites/${siteId}/cards`;
-    this.headers: {
+    this.headers = {
         'X-Weebly-Access-Token': options.token,
         'Content-Type': 'application/json',
         'Accepts': 'application/vnd.weebly.v1+json'
@@ -69,7 +68,7 @@ Card.toggleVisibility = function (visibile, cb) {
             url: `${this.APIBaseURL}/${this.cardId}`,
             headers: this.headers,
             data: {
-                hidden: visible;
+                hidden: visible
             }
         },
         function(err, response, body) {

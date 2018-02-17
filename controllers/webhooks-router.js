@@ -75,7 +75,6 @@ router.post('/callback', function(req, res) {
 				console.log('Card Update Response Data: ', data);
 			}
 		});
-		*/
 	}
 
 	let message = messages.join("\n");

@@ -3,7 +3,7 @@
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const Utility = require('./utility');
+const HMAC_Util = require('../utils/hmac');
 const Card = require('./card');
 
 /**
@@ -28,10 +28,10 @@ router.post('/callback', function(req, res) {
 	let messages = [];
 
     // invalidate the hmac, is it correct?
-	if (!Utility.validateHmac(req.body.hmac, comparisonString, req.app.secretKey)) {
+	if (!HMAC_Util.validateHmac(req.body.hmac, comparisonString, req.app.secretKey)) {
 		//messages.push(`Fresh webhook was received, but the calculated hmac does not match what was passed.`);
 		//messages.push(`Expected ${req.body.hmac}`);
-		//messages.push(`Calculated ${Utility.generateHmac(comparisonString)}`);
+		//messages.push(`Calculated ${HMAC_Util.generateHmac(comparisonString)}`);
 	} else {
 		//messages.push('A fresh webhook was recieved:');
 	}

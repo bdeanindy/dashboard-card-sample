@@ -6,7 +6,7 @@ const path = require('path');
 const crypto = require('crypto');
 const needle = require('needle');
 const querystring = require('querystring');
-const Utility = require('./utility');
+const HMAC_Util = require('../utils/hmac');
 
 /**
  * Initial OAuth endpoint as specified in `manifest.json`.
@@ -25,11 +25,11 @@ router.get('/phase-one', function(req, res) {
 	};
 	let compareString = querystring.stringify(compareObj);
 
-	if (!Utility.validateHmac(req.query.hmac, compareString, secretKey)) {
+	if (!HMAC_Util.validateHmac(req.query.hmac, compareString, secretKey)) {
 		let messages = [];
 		messages.push("The OAuth flow was started, but the hmac calculated didn't match the hmac passed.");
 		messages.push(`Expected: ${req.query.hmac}`);
-		messages.push(`Computed: ${Utility.generateHmac(compareString, secretKey)}`);
+		messages.push(`Computed: ${HMAC_Util.generateHmac(compareString, secretKey)}`);
 		let message = "\n" + messages.join("\n") + "\n";
 		return res.status(500).send(message);
 	}
