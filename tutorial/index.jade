@@ -1,0 +1,123 @@
+.chapter(data-title='Weebly Dashboard Card - Hello World Tutorial')
+  .step(data-title='Welcome!', data-file='tutorial/config.json')
+    h2 Welcome to Dashboard Card Hello World Tutorial! 
+
+    p Learn how the Weebly Dashboard Card Hello World app is structured with links to additional information for developers.
+
+    p The tutorial's navigation controls are located above this text. Use <i class="fa fa-fw fa-play"></i> to move to the next step of the tutorial. Use <i class="fa fa-fw fa-play fa-rotate-180"></i> to move to the previous step of the tutorial (if there is one). Use <i class="fa fa-fw fa-list"></i> to see an overview of all the steps in the tutorial.
+
+  .step(data-title='Prerequisites')
+    :markdown
+      ## Prerequisites
+
+      Before you can use the Hello World Dashboard Card in your Developer Test Site on Weebly, you will need to do the following:
+
+      1. If you do not already have a Free Weebly Developer Account, [create a free Weebly Developer Account](https://dev.weebly.com/create-a-developer-account.html).
+      2. You need to be able to login here: [Weebly Developer Admin](https://www.weebly.com/developer-admin/), or register as a developer if you cannnot.
+      3. You will need to create an app named `Dashboard Card HW`, learn how here: [Register a Weebly App](https://dev.weebly.com/register-your-app.html)
+
+      **NOTE:** Prior to developing any custom app for production, please [read the Weebly App Policy Requrements](https://dev.weebly.com/app-policy-requirements.html) to ensure your app meets Weebly's publishing requirements.
+
+      After you have either cloned this repository or downloaded/extracted the ZIP file to your local workstation, you are ready to continue.
+
+  .step(data-title='Defining the App', data-file='manifest.json.tmpl', data-highlight='1-15')
+    :markdown
+      ## Manifest.json 
+
+      The first file we'll look at is `manifest.json.tmpl`.
+
+      **NOTE: We reference a template `manifest.json.tmpl` file in this tutorial. Before deploying your Hello World Element, you will rename this file to `manifest.json`.**
+
+      Each custom app in Weebly requires exactly one `manifest.json` JSON data file which is a child of the root of the ZIP file you will upload to Weebly (more about this later).
+
+      The `manifest.json` file contains a single dashboard card which we have pre-defined for you.
+
+      The `manifest.json` file is read by the Weebly Platform when you upload your app's ZIP file (see the README.md file for deployment instructions).
+      
+      Let's learn about the properties used to define this basic `Hello World Dashboard Card` app:
+
+      * `manifest` (string): **Required** The version of the Weebly Platform API your app implements, currently must always be set to `"1"`
+      * `version` (string): **Required** The version of your app. This must follow [Semantic Versioning](http://semver.org/) guidelines
+      * `dashboard_cards` (array): **Required for Apps that define Dashboard Cards** The set of Dashboard Card objects associated with this app
+      * `client_id` (string): **Required** The Client ID for your app, as provided in the [Weebly Developer Admin](https://www.weebly.com/developer-admin/) for the app you created in the prerequisites
+      * `callback_url` (string): **Required** The OAuth2 Authorization Flow 1st Phase callback URL (must use *https* scheme, and have a valid SSL chain)
+      * `scopes` (array): **Required**  List of the API Permissions this app requires
+      * `oauth_final_destination` (string): **Required**  The location where site admins who install your app should arrive upon when installation completes successfully, see [Configure a Final Destination](https://dev.weebly.com/app-authorization-and-install-flow.html) for complete info
+      * `webhooks` (object): All dashboard cards receive webhook events when they need to update, this defines the associated Webhook
+
+      To learn more about what you can accomplish with `manifest.json`, read [Create the App Manifest](https://dev.weebly.com/create-the-app-manifest.html) in the [Weebly Developer Docs](https://dev.weebly.com).
+
+  .step(data-title='Webhooks', data-file='manifest.json.tmpl', data-highlight='11-14')
+    :markdown
+      ## Manifest.json - `webhooks`
+
+      Before we dig into the actual code for the dashboard card, we want to address the requirement for `webhooks`.
+
+      Learn about [Weebly Developer Webhooks](https://dev.weebly.com/use-webhooks.html).
+      Learn about [Weebly Cloud Webhooks](http://cloud-developer.weebly.com/cl_wh_webhooks.html).
+
+      There is an important relationship between Webhooks and Dashboard Cards because Weebly triggers a Webhook event `dashboard.card.update` each time the dashboard card is displayed to a user.
+
+      Your app needs to:
+      
+        * Listen for these events
+        * Inspect the event data
+        * GET associated dashboard card data via API
+        * Determine if any updates are required
+        * UPDATE associated dashboard card data via the API
+
+      How you architect your Weebly App is entirely up to you, but for simplicity's sake, we have included the Webhook as part of the dashboard card app.
+
+      Weebly Webhooks use the `webhooks.callback_url` property of the *manifest.json* to subscribe the app to Webhook events. This URL must employ the `https` scheme and support a valid SSL chain.
+
+      The `webhooks.events` array is a list of events your app should receive, for a dashboard card app, you should include the events shown in the example code (at a minimum).
+
+      In this tutorial, we are use [ngroks](https://ngrok.com/) as a possible solution for you to run this app on your local workstation.
+
+  .step(data-title='Defining Dashboard Cards', data-file='manifest.json.tmpl', data-highlight='15-47')
+    :markdown
+      ## Manifest.json - `dashboard_cards`
+
+      **NOTE:** This tutorial references `manifest.json.tmpl`, a template file. Before deploying your Hello World Dashboard Card App, you must rename this file to `manifest.json`.
+      Dashboard Cards are displayed on the Site Home and contain important information to site owners for the apps which they have installed on a site.
+
+      Complete [Weebly Developer Dashboard Card Docs](https://dev.weebly.com/what-are-dashboard-cards.html).
+      Complete [Weebly Cloud Dashboard Card Docs](http://cloud-developer.weebly.com/cl_apps_dashboard_cards.html).
+
+      The remainder of this tutorial and the associated code is focused upon Weebly Developer Dashboard Cards (for now, we will omit the Cloud Dashboard Card information).
+
+  .step(data-title='Dashboard Card - Name', data-file='manifest.json.tmpl', data-highlight='17')
+    :markdown
+      ## Dashboard Card - `name`
+
+      The programmatic reference for this dashboard card, can be used in your manifest.json `oauth_final_destination`.
+
+  .step(data-title='Dashboard Card - Version', data-file='manifest.json.tmpl', data-highlight='18')
+    :markdown
+      ## Dashboard Card - `version`
+
+      The version of this dashboard card, must follow [SemVer](https://semver.org/).
+
+  .step(data-title='Dashboard Card - Label', data-file='manifest.json.tmpl', data-highlight='19')
+    :markdown
+      ## Dashboard Card - `label`
+
+      The displayed title which is shown to site admins while viewing their Weebly Dashboard.
+
+  .step(data-title='Dashboard Card - Icon', data-file='manifest.json.tmpl', data-highlight='20')
+    :markdown
+      ## Dashboard Card - `icon`
+
+      The icon which should be displayed for this dashboard card.
+
+  .step(data-title='Dashboard Card - Link', data-file='manifest.json.tmpl', data-highlight='21')
+    :markdown
+      ## Dashboard Card - `link`
+
+      The URL that should load when a site admin clicks on the header of this dashboard card to set or update its configurations. Must employe `https` scheme and have a valid SSL chain.
+
+  .step(data-title='Dashboard Card - Default', data-file='manifest.json.tmpl', data-highlight='22-45')
+    :markdown
+      ## Dashboard Card - `default`
+
+      This is the default set of information displayed to users who have not configured this dashboard card yet. This property is required, but can be null (which will not show any default content until this card is configured).
