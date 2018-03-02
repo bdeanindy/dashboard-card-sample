@@ -145,7 +145,7 @@
       * Weebly Middleware - Makes the `client_id` and `client_secret` available on each inbound request.
       * oAuthRouter - Express.js routerhandling [App Authorization and Install Flow](https://dev.weebly.com/app-authorization-and-install-flow.html)
       * webhookRouter - Express.js router handling Webhook Subscriptions and Events
-      * dashboardCards - Creates new Card Objects and communicates with Weebly Card API
+      * dashboardCardRouter - Express.js router handling Dashboard Card Management UI Rendering
 
   .step(data-title='Weebly Middleware and Routers', data-file='app.js', data-highlight='41-63')
     :markdown
@@ -156,6 +156,7 @@
       * Weebly Middleware function should operate on every request
       * Any route beginning with `/oauth` should be handled by the *oAuthRouter* (only applies to non-Cloud apps)
       * Any route beginning with `/webhooks` should be handled by the *webhookRouter*
+      * Any route beginning with `/cards` should be handled by the *dashboardCardRouter*
 
   .step(data-title='OAuth Router', data-file='controllers/oauth-router.js')
     :markdown
