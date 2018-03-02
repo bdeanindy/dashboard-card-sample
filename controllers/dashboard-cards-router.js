@@ -10,14 +10,17 @@ const Card = require('./card');
  * Callback URL as specified in `manifest.json`
  */
 router.get('/setup/:cardName/:jwt', function(req, res) {
+	console.log(`GET request to ${req.path}`);
+	console.log(`\n`);
+	//console.log(`Token: ${req.app.token}`);
+	//console.log(`\n`);
+	console.log(`Request.params.cardName: ${req.params.cardName}\n`);
+	console.log(`\n`);
+	console.log(`Request.params.JWT: ${req.params.jwt}\n`);
+
 	let messages = [];
 	let reqJWT = req.params.jwt;
 	let cardName = req.params.cardName;
-	//console.log(`GET request to '/cards/setup/:JWT'`);
-	//console.log(`\n`);
-	//console.log(`Token: ${req.app.token}`);
-	//console.log(`\n`);
-	//console.log(`Request.JWT: ${req.params.jwt}\n`);
 
 	// We must have a JWT in order to lookup the Dashboard Card's configurations for the user
 	if(!reqJWT && !cardName) {
