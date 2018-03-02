@@ -3,73 +3,53 @@
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const HMAC_Util = require('../utils/hmac');
+const JWT = require('jsonwebtoken');
 const Card = require('./card');
 
 /**
  * Callback URL as specified in `manifest.json`
  */
-router.post('/callback', function(req, res) {
-	//console.log(`POST request sent to '/webhooks/callback'`);
+router.get('/setup/:cardName/:jwt', function(req, res) {
+	let messages = [];
+	let reqJWT = req.params.jwt;
+	let cardName = req.params.cardName;
+	//console.log(`GET request to '/cards/setup/:JWT'`);
 	//console.log(`\n`);
 	//console.log(`Token: ${req.app.token}`);
 	//console.log(`\n`);
-	//console.log(`Request.SOMETHING: ${req}\n`);
-	let comparisonObject = {
-		'client_id': req.body.client_id,
-		'client_version': req.body.client_version,
-		'event': req.body.event,
-		'timestamp': req.body.timestamp,
-		'data': req.body.data
-	};
+	//console.log(`Request.JWT: ${req.params.jwt}\n`);
 
-	let comparisonString = JSON.stringify(comparisonObject);
-
-	let messages = [];
-
-    // invalidate the hmac, is it correct?
-	if (!HMAC_Util.validateHmac(req.body.hmac, comparisonString, req.app.secretKey)) {
-		//messages.push(`Fresh webhook was received, but the calculated hmac does not match what was passed.`);
-		//messages.push(`Expected ${req.body.hmac}`);
-		//messages.push(`Calculated ${HMAC_Util.generateHmac(comparisonString)}`);
+	// We must have a JWT in order to lookup the Dashboard Card's configurations for the user
+	if(!reqJWT && !cardName) {
+		let err = new Error('GET request to `/cards/setup/:jwt` is missing the required JWT');
+		console.error(err);
+		res.status(400).send(err);
 	} else {
-		//messages.push('A fresh webhook was recieved:');
-	}
+		// Invalidate the JWT
+		let decoded = JWT.verify(reqJWT, req.app.secretKey, {algorithms: "HS256", maxAge: "1h"}); // If this breaks, might need to pass the secretKey parameter as Base64 buffer: `Buffer.from(req.app.secretKey, 'base64')`
+		if(!decoded) {
+			console.error('Unable to decode the JWT');
+			res.status(403).send('Unable to decode the JWT');
+		} else {
+			console.log(`Decoded JWT: ${decoded}`);
+			// TODO: Lookup user and site
+			// TODO: Load existing configurations
+			// TODO: Load the UI with data if configurations exist
+			// TODO: Else load the UI to be configured
 
-	//{\n  "client_id": "465279841",\n  "client_version": "1.0.1",\n  "event": "dashboard.card.update",\n  "timestamp": 1503029424,\n  "data": {\n    "user_id": "108919051",\n    "site_id": "247763368794122525",\n    "platform_app_id": "465279841",\n    "platform_dashboard_card_id": "528166133822187070",\n    "platform_dashboard_card_version": "1.0.1",\n    "name": "devrel-interview",\n    "language": "en"\n  },\n  "hmac": "832035fade569f7a28ff27fcd16556d74d4e02cc396bcf3692ebd6727376f142"\n}
-	//messages.push(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
-	//messages.push(`Data: ${JSON.stringify(req.body, null, 2)}`);
-
-	//messages.push("\n");
-
-	// We only want to update the card data when we receive the appropriate events, in this case: `dasboard.card.update` events
-	if('dashboard.card.update' === req.body['event']) {
-		/*
-		messages.push(`Received update dashboard card event`);
-		messages.push("\n");
-		messages.push(`Full Request Body: ${req.body}`);
-		messages.push("\n");
-		messages.push(`Request Body Data Property: ${req.body.data}`);
-		messages.push("\n");
-		*/
-
-		Card.update(req.body.data, function(err, data) {
-			if(err) {
-				console.error(err, data);
-			} else {
-				console.log('User Data: ', data);
-				res.render('reseller', {
-					
-				});
+			if( cardName !== process.env.WEEBLY_DASHBOARD_CARD_NAME ) {
+				console.error('Unknown Dashboard Card, cannot proceed');
+				res.status(400).send('Unknown Dashboard Card, cannot proceed');
 			}
-		});
+			res.render('manageCard', {
+				user: decoded.user_id,
+				site: decoded.site_id,
+				jti: decoded.jti,
+				iat: decoded.iat,
+				card: cardName
+			});
+		}
 	}
-
-	//let message = messages.join("\n");
-	//console.log('Messages: ', messages);
-
-	res.status(200).send(message);
-
 });
 
 /**
