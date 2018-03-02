@@ -120,4 +120,78 @@
     :markdown
       ## Dashboard Card - `default`
 
-      This is the default set of information displayed to users who have not configured this dashboard card yet. This property is required, but can be null (which will not show any default content until this card is configured).
+      This is the default set of components displayed when the dashboard card is unconfigured. This property is required, but can be an empty array that hides the dashboard card until configured.
+
+      In the tutorial code, we have configured a single [Welcome Component](https://dev.weebly.com/welcome-component.html).
+
+      Now let's review the code that handles this app's OAuth2 Authorization Flow.
+
+  .step(data-title='Express App', data-file='app.js')
+    :markdown
+      ## Node.js Express App
+
+      This app is a [Node.js](https://nodejs.org) app that uses [Express.js](https://expressjs.com/), a Node.js Web Server, to handle all aspects of the app.
+
+      You have the option to define the webhook consumer outside of the dashboard card app, but for this tutorial we've included everything into a single codebase. 
+
+      The `app.js` file defines the foundation of the app.
+
+  .step(data-title='Weebly Middleware and Routers', data-file='app.js', data-highlight='14-18')
+    :markdown
+      ## Middleware and Routers
+
+      Here we are defining constants to code that handles various operations for this tutorial:
+
+      * Weebly Middleware - Makes the `client_id` and `client_secret` available on each inbound request.
+      * oAuthRouter - Express.js routerhandling [App Authorization and Install Flow](https://dev.weebly.com/app-authorization-and-install-flow.html)
+      * webhookRouter - Express.js router handling Webhook Subscriptions and Events
+      * dashboardCards - Creates new Card Objects and communicates with Weebly Card API
+
+  .step(data-title='Weebly Middleware and Routers', data-file='app.js', data-highlight='41-63')
+    :markdown
+      ## Middleware and Routers
+
+      Here we are telling Express how we want to use the code referenced in the previous step's constants:
+
+      * Weebly Middleware function should operate on every request
+      * Any route beginning with `/oauth` should be handled by the *oAuthRouter* (only applies to non-Cloud apps)
+      * Any route beginning with `/webhooks` should be handled by the *webhookRouter*
+
+  .step(data-title='OAuth Router', data-file='controllers/oauth-router.js')
+    :markdown
+      ## Authorization Flow
+
+      Since our application will use the [Cards API](https://dev.weebly.com/card-api.html) our app will need a valid `access_token` authorized for use on this site by the Weebly Site Admin.
+
+      **NOTE:** Developers building [custom Cloud Apps](http://cloud-developer.weebly.com/cl_apps_dev.html) will NOT use the OAuth2 Authorization Flow, but instead must [Sign and Authenticate Requests](http://cloud-developer.weebly.com/cl_api_about.html#signing-and-authenticating-requests) to the [Cloud API](http://cloud-developer.weebly.com/cl_api_about.html).
+
+  .step(data-title='OAuth2 - Phase 1', data-file='controllers/oauth-router.js', data-highlight='11-55')
+    :markdown
+      ## OAuth2 Phase 1 
+
+      The first phase of Weebly's OAuth2 Authorization Flow occurs when a Weebly Site Admin clicks the "Add App" button for your app from within [Weebly App Center](https://www.weebly.com/app-center) while logged into Weebly for their site.
+
+      If you haven't developed a Weebly App or developed with Express.js, you might be confused about how Weebly knows to load this URL when a Weebly Site Admin clicks "Add App".
+
+      Simply put, it is defined in your app's *manifest.json* property named `callback_url`. You might notice in the *manifest.json.tmpl* file you need to replace that URL with a valid URL. This is where [ngrok](https://ngrok.com/) comes into play.
+
+  .step(data-title='callback_url', data-file='manifest.json.tmpl', data-highlight='5')
+    :markdown
+      ## Callback URL 
+
+      You are not required to use [ngrok](https://ngrok.com), but we will use it in this tutorial.
+      
+      **NOTE:** If you are not using the [Tunnels on custom domains](https://ngrok.com/docs#custom-domains) feature of ngrok, you will need to update your `.env` file and `manifest.json` file with the URLs provided each time you start ngrok.
+
+      1. Please download and install [ngrok](https://ngrok.com/download) for your OS
+      2. In a new terminal window, start ngrok: `./ngrok http 3000`
+
+  .step(data-title='OAuth2 - Phase 1', data-file='controllers/oauth-router.js', data-highlight='11-55')
+    :markdown
+      ## OAuth2 Phase 1 
+
+      The variable, *phaseTwoLink* which is set to `https://${req.headers.host}/oauth/phase-two` is sent back to Weebly, and will be used for the second phase.
+
+  .step(data-title='OAuth2 - Phase 2', data-file='controllers/oauth-router.js', data-highlight='57-91')
+    :markdown
+      ## OAuth2 Phase 2 
