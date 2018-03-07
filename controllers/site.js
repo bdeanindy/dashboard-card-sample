@@ -2,28 +2,27 @@
 
 const crypto = require('crypto');
 const request = require('request');
-const CardModel = require('../models/card');
+const Site = require('../models/site');
 
 // Vars
 const weeblyAPI  = process.env.MY_API_BASE_URI;
 
+/** TODO
+* Create new user in DB
+* Handle where we are storing stuff (in Mongo, or from API)
+**/
+
 /**
- * Weebly Card
+ * Weebly Site 
  */
-const Card = module.exports = function(options = {}) {
-    console.log('Instantiate New Card options argument: ', options);
+const Site = module.exports = function(options = {}) {
+    console.log('Instantiate New Site options argument: ', options);
 
-    // Base Route for Card API
-    this.APIBaseURL = `${weeblyAPI}/user/sites/${options.site_id}/cards`;
-
-    this.app_id      = process.env.WEEBLY_CLIENT_ID;
-    this.site_id     = options.site_id;
-    this.user_id     = options.user_id;
-    this.card_id     = null;
-    this.card_data   = null;
-    this.language   = null;
-    this.name       = null;
-    this.version    = null;
+    // Base Route for Site API
+    this.APIBaseURL = `${weeblyAPI}/user/sites`;
+    this.appId      = process.env.WEEBLY_CLIENT_ID;
+    this.siteId     = options.site_id;
+    this.userId     = options.user_id;
     this.headers    = {
         'X-Weebly-Access-Token': options.token,
         'Content-Type': 'application/json',
@@ -31,11 +30,12 @@ const Card = module.exports = function(options = {}) {
     };
 };
 
-// Retrieve the card details from Weebly Card API: https://dev.weebly.com/card-api.html 
-Card.prototype.getDetails = (cb) => {
+// Retrieve the card details from Weebly Site API: https://dev.weebly.com/card-api.html 
+Site.prototype.getSites = (params = {}, cb) => {
+    // TODO: Build out params filters and add to request if present
     request({
             method: `GET`,
-            url: `${this.APIBaseURL}/${this.card_id}`,
+            url: `${this.APIBaseURL}/${this.cardId}`,
             headers: this.headers
         },
         function(err, response, body) {
@@ -43,18 +43,18 @@ Card.prototype.getDetails = (cb) => {
                 console.error(err);
                 cb(err, data);
             } else {
-                console.log('getDetails response body: ', body);
+                console.log('GET Site List response body: ', body);
                 cb(null, body);
             }
         }
     );
 };
 
-// TODO: NEEDS DATA IN REQUEST!!!
-Card.prototype.update = (data, cb) => {
+Site.prototype.update = (data, cb) => {
+    // TODO: Build out update data in request
     request({
             method: `PATCH`,
-            url: `${this.APIBaseURL}/${this.card_id}`,
+            url: `${this.APIBaseURL}/${data.siteId}`,
             headers: this.headers
         },
         function(err, response, body) {
@@ -69,10 +69,10 @@ Card.prototype.update = (data, cb) => {
     );
 };
 
-Card.prototype.refresh = (cb) => {
+Site.prototype.getById = (siteId, cb) => {
     request({
             method: `GET`,
-            url: `${this.APIBaseURL}/${this.card_id}`,
+            url: `${this.APIBaseURL}/${siteId}`,
             headers: this.headers
         },
         function(err, response, body) {
@@ -81,10 +81,10 @@ Card.prototype.refresh = (cb) => {
                 cb(err, data);
             } else {
                 console.log('getDetails response body: ', body);
-                this.card_id = body.card_id;
+                this.cardId = body.card_id;
                 this.name = body.name;
                 this.visible = body.hidden;
-                this.card_data = body.card_data;
+                this.cardData = body.card_data;
                 cb(null, body);
             }
         }

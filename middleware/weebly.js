@@ -11,8 +11,8 @@ const express = require('express');
  * @constructor
  */
 let WeeblyMiddleware = function(options) {
-	let clientId = process.env.MY_CLIENT_ID || options.client_id;
-	let secretKey = process.env.MY_CLIENT_SECRET || options.secret_key;
+	let clientId = process.env.WEEBLY_CLIENT_ID || options.client_id;
+	let secretKey = process.env.WEEBLY_CLIENT_SECRET || options.secret_key;
 
 	return function(req, res, next) {
 		if (!clientId) {

@@ -3,10 +3,10 @@
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const needle = require('needle');
 const querystring = require('querystring');
 const HMAC_Util = require('../utils/hmac');
+const OAuth = require('../models/oauth');
 
 /**
  * Initial OAuth endpoint as specified in `manifest.json`.
@@ -51,6 +51,18 @@ router.get('/phase-one', function(req, res) {
 		redirectUrl += `&version=${req.query.version}`;
 	}
 
+	// TODO: Find existing installation first
+	OAuth.create({
+		site_id: req.query.site_id,
+		user_id: req.query.user_id,
+		active: false,
+		version: req.query.version,
+		weebly_timestamp: req.query.timestamp
+	}, (err, record) => {
+		if(err) console.error(err);
+		console.log('Saved OAuth Phase One: ', record);
+	});
+
 	res.redirect(redirectUrl);
 });
 
@@ -83,9 +95,21 @@ router.get('/phase-two', function(req, res) {
 		// we have the token. you can store this wherever
 		req.app.token = payload.access_token;
 
-		console.log(`\nAccess token: ${payload.access_token}`);
+		// Update the OAuth Item in Mongo
+		let oauthQuery = { site_id: req.query.site_id, user_id: req.query.user_id};
+		OAuth.findOneAndUpdate(oauthQuery, {token: payload.access_token, active: true})
+		.then((install) => {
+			console.log('We have a token!');
+			console.log('Install: ', install);
+			return install;
+		})
+		.catch((err) => {
+			console.error(err);
+			throw err;
+		});
 
-		console.log(`\nPayload.callback_url: ${payload.callback_url}`);
+		//console.log(`\nAccess token: ${payload.access_token}`);
+		//console.log(`\nPayload.callback_url: ${payload.callback_url}`);
 		res.redirect(payload.callback_url);
 	});
 });

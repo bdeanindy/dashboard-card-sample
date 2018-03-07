@@ -13,9 +13,13 @@ const bodyParser		= require('body-parser');
 
 // CUSTOM WEEBLY MIDDLEWARE AND ROUTERS
 const WeeblyMiddleware		= require('./middleware/weebly.js');
-const oauthRouter			= require('./controllers/oauth-router.js');
-const webhooksRouter		= require('./controllers/webhooks-router.js');
-const dashboardCardsRouter	= require('./controllers/dashboard-cards-router.js');
+const oauthRouter			= require('./routes/oauth-router.js');
+const webhooksRouter		= require('./routes/webhooks-router.js');
+const dashboardCardsRouter	= require('./routes/dashboard-cards-router.js');
+
+// MongoDB Connection
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise; // Use native Node Promises
 
 // BASE ROUTES
 const index = require('./routes/index');
@@ -60,7 +64,11 @@ const wMiddleware = new WeeblyMiddleware({
 app.use('/oauth', wMiddleware, oauthRouter);
 app.use('/webhooks', wMiddleware, webhooksRouter);
 app.use('/cards', wMiddleware, dashboardCardsRouter);
-app.locals.siteCardCache = {};
+
+mongoose.connect('mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PW + '@' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB)
+	.then(() => console.log('connection successful'))
+	.catch((err) => console.error(err))
+	;
 
 // Catch 404 forwards to error handler
 app.use(function(req, res, next) {
