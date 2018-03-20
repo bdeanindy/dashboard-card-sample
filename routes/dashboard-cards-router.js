@@ -16,7 +16,7 @@ const manifest = require('../manifest');
 /**
  * Callback URL as specified in `manifest.json`
  */
-router.get('/setup/:name/:jwt', function(req, res, next) {
+router.get('/manage/:name/:jwt', function(req, res, next) {
 	// Card name required to match up webhook events later
 	if(!req.params.name) {
 		let err = new Error('Invalid request, cardName path variable is required.');
@@ -42,16 +42,19 @@ router.get('/setup/:name/:jwt', function(req, res, next) {
 		res.status(403).send(err);
 	}
 
-	// TODO: Load from DB or create if it does not exist
+	// Load from DB or create if it does not exist
 	Card.findOne({
 		site_id: decoded.site_id,
 		user_id: decoded.user_id,
 		name: req.params.name
 	})
+	.exec()
 	.then((card) => {
+		console.log('Card retrieved from the DB, continuing...');
 		if(!card) {
-			// Prepare data needed to create a new Card
+			// Create a new placeholder Card in Mongo if we cannot find any for the user and site provided
 			let newCardData = {
+				app_id: req.app.clientId,
 				name: req.params.name,
 				user_id: decoded.user_id,
 				site_id: decoded.site_id,
@@ -65,12 +68,14 @@ router.get('/setup/:name/:jwt', function(req, res, next) {
 		}
 	})
 	.then((card) => {
+		console.log('Should be rendering the `manageCard` view now...');
 		res.render('manageCard', card);
 	})
 	.catch((err) => {
 		console.error(err);
 		throw err;
 	});
+
 	/*
 	currentCard.refresh((err, data) => {
 		if(err) {
@@ -89,43 +94,6 @@ router.get('/setup/:name/:jwt', function(req, res, next) {
 		}
 	});
 	*/
-});
-
-router.get('/welcome/:name/:jwt', (req, res, next) => {
-	// We must have a card name in the route to match up webhook events later
-	if(!req.params.name) {
-		let err = new Error('Invalid request, cardName path variable is required.');
-		console.error(err);
-		res.status(400).send(err);
-	}
-
-	// We must have a JWT in order to lookup the Dashboard Card's configurations for the user
-	if(!req.params.jwt) {
-		let err = new Error('Invalid request, JWT path variable is required.');
-		console.error(err);
-		res.status(400).send(err);
-	}
-
-	// Verify the JWT
-	let decoded = JWT.verify(req.params.jwt, req.app.secretKey, {algorithms: "HS256", maxAge: "1h"}); // If this breaks, might need to pass the secretKey parameter as Base64 buffer: `Buffer.from(req.app.secretKey, 'base64')`
-
-	// Handle error validating JWT
-	if(!decoded) {
-		// POTENTIAL SECURITY VULNERABILITY: Must not proceed if you cannot verify the JWT 
-		let err = new Error(`Unable to verify the JWT, cannot proceed`);
-		console.error(err);
-		res.status(403).send(err);
-	}
-	// TODO: Determine if user already exists
-	// TODO: If user exists, load their data
-	// Render the Welcome view (per Weebly Design Considerations: https://dev.weebly.com/welcome-component.html
-	res.render('welcomeCard', {
-		user: decoded.user_id,
-		site: decoded.site_id,
-		jti: decoded.jti,
-		iat: decoded.iat,
-		card: process.env.WEEBLY_DASHBOARD_CARD_LABEL
-	});
 });
 
 /**

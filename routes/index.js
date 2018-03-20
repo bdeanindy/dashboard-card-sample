@@ -14,4 +14,19 @@ router.get('/', function(req, res, next) {
     });
 });
 
+/* GET manage page */
+router.get('/manage', function(req, res, next) {
+    res.render('manage', {
+    });
+});
+
+/* GET admin page */
+router.get('/admin', function(req, res, next) {
+    // Get the list of webhooks from the Weebly API
+    // Get the list of events from Mongo
+    res.render('admin', {
+        
+    });
+});
+
 module.exports = router;
