@@ -16,7 +16,7 @@ const manifest = require('../manifest');
 /**
  * Callback URL as specified in `manifest.json`
  */
-router.get('/manage/:name/:jwt', function(req, res, next) {
+router.get('/manage/:name/:jwt', function(req, res) {
 	// Card name required to match up webhook events later
 	if(!req.params.name) {
 		let err = new Error('Invalid request, cardName path variable is required.');
@@ -42,7 +42,7 @@ router.get('/manage/:name/:jwt', function(req, res, next) {
 		res.status(403).send(err);
 	}
 
-	// Load from DB or create if it does not exist
+	// First, try to load from the DB 
 	Card.findOne({
 		site_id: decoded.site_id,
 		user_id: decoded.user_id,
@@ -52,6 +52,7 @@ router.get('/manage/:name/:jwt', function(req, res, next) {
 	.then((card) => {
 		console.log('Card retrieved from the DB, continuing...');
 		if(!card) {
+			console.log('Must be a new DBCard/User so create a card in the DB');
 			// Create a new placeholder Card in Mongo if we cannot find any for the user and site provided
 			let newCardData = {
 				app_id: req.app.clientId,
@@ -63,11 +64,11 @@ router.get('/manage/:name/:jwt', function(req, res, next) {
 			let newCard = new Card(newCardData);
 			return newCard.save();
 		} else {
-			console.log('Card Exists in DB: ', card);
 			return card;
 		}
 	})
 	.then((card) => {
+		console.log('Card is: ', card);
 		console.log('Should be rendering the `manageCard` view now...');
 		res.render('manageCard', card);
 	})

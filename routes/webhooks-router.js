@@ -18,7 +18,7 @@ let Event = require('../models/event');
 router.post('/callback', function(req, res, next) {
 	console.log(`POST request received at /webhooks${req.path}\n`);
 	//console.log(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
-	console.log(`Data: ${JSON.stringify(req.body, null, 2)}`);
+	//console.log(`Data: ${JSON.stringify(req.body, null, 2)}`);
 
 	// Verify data matches what we expect
 	let comparisonObject = {
