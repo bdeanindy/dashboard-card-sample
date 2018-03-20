@@ -12,7 +12,7 @@ const OAuth = require('../models/oauth');
  * Initial OAuth endpoint as specified in `manifest.json`.
  */
 router.get('/phase-one', function(req, res) {
-	console.log('Phase one of redirect has been initiated');
+	//console.log('Phase one of redirect has been initiated');
 
 	const clientId = req.app.clientId;
 	const secretKey = req.app.secretKey;
@@ -27,9 +27,9 @@ router.get('/phase-one', function(req, res) {
 
 	if (!HMAC_Util.validateHmac(req.query.hmac, compareString, secretKey)) {
 		let messages = [];
-		messages.push("The OAuth flow was started, but the hmac calculated didn't match the hmac passed.");
-		messages.push(`Expected: ${req.query.hmac}`);
-		messages.push(`Computed: ${HMAC_Util.generateHmac(compareString, secretKey)}`);
+		//messages.push("The OAuth flow was started, but the hmac calculated didn't match the hmac passed.");
+		//messages.push(`Expected: ${req.query.hmac}`);
+		//messages.push(`Computed: ${HMAC_Util.generateHmac(compareString, secretKey)}`);
 		let message = "\n" + messages.join("\n") + "\n";
 		return res.status(500).send(message);
 	}
@@ -60,7 +60,7 @@ router.get('/phase-one', function(req, res) {
 		weebly_timestamp: req.query.timestamp
 	}, (err, record) => {
 		if(err) console.error(err);
-		console.log('Saved OAuth Phase One: ', record);
+		//console.log('Saved OAuth Phase One: ', record);
 	});
 
 	res.redirect(redirectUrl);
@@ -70,7 +70,7 @@ router.get('/phase-one', function(req, res) {
  * Secondary OAuth endpoint as specified by `phaseTwoLink` in the phase one endpoint
  */
 router.get('/phase-two', function(req, res) {
-	console.log(`\nPhase two of redirect has been initiated\n`);
+	//console.log(`\nPhase two of redirect has been initiated\n`);
 	//console.log(`Client ID on req.app.clientId: ${req.app.clientId}\n`);
 	//console.log(`Client Secret on req.app.secretKey: ${req.app.secretKey}\n`);
 	const clientId = req.app.clientId;
@@ -84,7 +84,7 @@ router.get('/phase-two', function(req, res) {
 		client_secret: secretKey,
 		authorization_code: req.query.authorization_code
 	}, function(error, response) {
-		console.log(`Inside needle callback`);
+		//console.log(`Inside needle callback`);
 		if (error) {
 			console.error(`\nPhase two failure: ${error}`);
 			return res.status(500).send('failed');
