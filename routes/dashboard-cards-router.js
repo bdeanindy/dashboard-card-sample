@@ -7,6 +7,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const router = require('express').Router();
 const manifest = require('../manifest');
+const CardAPI = require('../controllers/card');
 
 /** TODO
 	* Abstract JWT into its own module
@@ -59,7 +60,11 @@ router.get('/manage/:name/:jwt', function(req, res) {
 				name: req.params.name,
 				user_id: decoded.user_id,
 				site_id: decoded.site_id,
-				token: req.app.token
+				count: 1,
+				token: req.app.token,
+				hidden: false,
+				language: 'en-us',
+				version: manifest.dashboard_cards[0].version
 			};
 			let newCard = new Card(newCardData);
 			return newCard.save();
@@ -70,7 +75,16 @@ router.get('/manage/:name/:jwt', function(req, res) {
 	.then((card) => {
 		console.log('Card is: ', card);
 		console.log('Should be rendering the `manageCard` view now...');
-		res.render('manageCard', card);
+
+		res.render('manageCard', {
+			cardName: card['name'],
+			cardUser: card['user_id'],
+			cardSite: card['site_id'],
+			cardHide: card['hidden'], 
+			cardlang: card['language'],
+			cardVers: card['version'],
+			cardData: card['card_data']
+		});
 	})
 	.catch((err) => {
 		console.error(err);
@@ -95,6 +109,55 @@ router.get('/manage/:name/:jwt', function(req, res) {
 		}
 	});
 	*/
+});
+
+router.get('/update/:name', function(req, res) {
+	// Reject if we don't have the data we need
+	if(!req.query.user || !req.query.site || !req.query.card) {
+		let err = new Error('Invalid Request: Must supply valid: user, site, and card IDs.');
+		console.error(err);
+		res.status(400).send(err);
+	}
+
+	// Placeholder
+	let apiCard = new CardAPI({
+		card_id: req.query.card,
+		user_id: req.query.user,
+		site_id: req.query.site 
+	});
+
+	// Load from the DB, could be done in the controller
+	let target = Card.findOne({
+		site_id: decoded.site_id,
+		user_id: decoded.user_id,
+		name: req.params.name
+	})
+	.exec()
+	.then((card) => {
+		let cardDataStatIndex = card.card_data.findIndex(function(element) {
+			return 'stat' === element.type && 'Counter' === element.primary_label;
+		});
+		card.card_data[cardDataStatIndex].primaryValue += 1;
+
+		// TODO: Really really really need to replace these callbacks with Promise or async/await
+		apiCard.update({
+			card_data: card.card_data
+		}, function(err, updatedResponse) {
+			if(err) {
+				console.error(err);
+				res.send(err);
+			} else {
+				console.log('Updated in the API:', updatedResponse);
+				card.save();
+				res.status(200).send({count: card.card_data[cardDataStatIndex].primaryValue});
+			}
+		});
+	})
+	.catch((err) => {
+		console.error(err);
+		throw err;
+	});
+
 });
 
 /**

@@ -12,7 +12,7 @@ let Utility = {};
  * @returns {boolean}
  */
 Utility.validateHmac = function(hmac, compareString, key) {
-	console.log('Validating the HMAC');
+	//console.log('Validating the HMAC');
 	let digest = this.generateHmac(compareString, key);
 	//console.log('Digest: ', digest);
 	return (digest == hmac);

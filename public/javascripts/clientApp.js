@@ -1,8 +1,8 @@
-$(document).readh(function() {
+$(document).ready(function() {
     console.log('jQuery should be loaded now...');
 
     /*** Handle Editor/Publish Buttons to Weebly ***/
-
+    /*
     let $editorButton = $('#editorButton');
     let $publishButton = $('#publishButton');
 
@@ -28,40 +28,25 @@ $(document).readh(function() {
         console.log( 'Data: ', evt.data ); // The object passed from the other window
         console.log( 'Source: ', evt.source ); // A reference to the window object that sent the message, use this to establish two-way communication cross-origin
     };
+    */
 
+    // Handle proxying the bump in DBCard Counter
+    let $bumpBtn = $('#bumpCount');
 
-    /*** Welcome Card Wizard ***/
-    //Initialize tooltips
-    $('.nav-tabs > li a[title]').tooltip();
-    
-    //Wizard
-    $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+    $bumpBtn.on('click', function(evt) {
+        let $cardId = $('#cardId').val();
+        let $siteId = $('#siteId').val();
+        let $userId = $('#userId').val();
 
-        var $target = $(e.target);
-    
-        if ($target.parent().hasClass('disabled')) {
-            return false;
-        }
+        let jqxhr = $.get('/cards/update/:name' ? $.param({ card: $cardId, site: $siteId, user: $userId}), function(response) {
+            $('#count').val(response.count);
+        })
+        .fail(function() {
+            console.log(response);
+        })
+        .always(function() {
+            alert('Final step of AJAX request cycle, all done now');
+        });
     });
 
-    $(".next-step").click(function (e) {
-
-        var $active = $('.wizard .nav-tabs li.active');
-        $active.next().removeClass('disabled');
-        nextTab($active);
-
-    });
-    $(".prev-step").click(function (e) {
-
-        var $active = $('.wizard .nav-tabs li.active');
-        prevTab($active);
-
-    });
 });
-
-function nextTab(elem) {
-    $(elem).next().find('a[data-toggle="tab"]').click();
-}
-function prevTab(elem) {
-    $(elem).prev().find('a[data-toggle="tab"]').click();
-}

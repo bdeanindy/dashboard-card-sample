@@ -51,7 +51,6 @@ router.post('/callback', function(req, res, next) {
 	if('dashboard.card.update' === req.body['event']) {
 		console.log('Dashboard Card Update Event...');
 
-		/*
 		Card.findOneAndUpdate({site_id: req.body.data.site_id, user_id: req.body.data.user_id}, {app_id: req.body.data.platform_app_id, card_id: platform_dashboard_card_id, version: platform_dashboard_card_version, language: req.body.data.language})
 		.then((updatedCard) => {
 			console.log('Card updated in DB. TODO: update it via Weebly API');
@@ -69,7 +68,6 @@ router.post('/callback', function(req, res, next) {
 		.catch((err) => {
 			console.error(err);
 		});
-		*/
 	}
 
 	// Handle `app.uninstall` events
