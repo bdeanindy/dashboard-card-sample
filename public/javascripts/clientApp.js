@@ -30,16 +30,19 @@ $(document).ready(function() {
     };
     */
 
+    // LOADING ICON SHOWN BY DEFAULT, `appData` HIDDEN BY DEFAULT
+
     // Handle proxying the bump in DBCard Counter
     let $bumpBtn = $('#bumpCount');
 
     $bumpBtn.on('click', function(evt) {
+        let $targetCount = $('#targetCount').val() || $('#currentCount').val() + 1;
         let $cardId = $('#cardId').val();
         let $siteId = $('#siteId').val();
         let $userId = $('#userId').val();
 
-        let jqxhr = $.get('/cards/update/:name' ? $.param({ card: $cardId, site: $siteId, user: $userId}), function(response) {
-            $('#count').val(response.count);
+        let jqxhr = $.post('/cards/update/helloworld' {card: $cardId, site: $siteId, user: $userId, targetCount: $targetCount}), function(response) {
+            $('#currentCount').val(response.count);
         })
         .fail(function() {
             console.log(response);

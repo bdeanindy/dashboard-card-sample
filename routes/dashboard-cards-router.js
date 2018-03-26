@@ -43,6 +43,12 @@ router.get('/manage/:name/:jwt', function(req, res) {
 		res.status(403).send(err);
 	}
 
+	// SHOW LOADER WHILE WORKING
+	// GET CARD FROM THE API
+	// DETERMINE STATE FROM card_data
+	// HIDE LOADER
+	// PRESENT TO USER
+
 	// First, try to load from the DB 
 	Card.findOne({
 		site_id: decoded.site_id,
@@ -51,9 +57,9 @@ router.get('/manage/:name/:jwt', function(req, res) {
 	})
 	.exec()
 	.then((card) => {
-		console.log('Card retrieved from the DB, continuing...');
+		//console.log('Card retrieved from the DB, continuing...');
 		if(!card) {
-			console.log('Must be a new DBCard/User so create a card in the DB');
+			//console.log('Must be a new DBCard/User so create a card in the DB');
 			// Create a new placeholder Card in Mongo if we cannot find any for the user and site provided
 			let newCardData = {
 				app_id: req.app.clientId,
@@ -73,17 +79,31 @@ router.get('/manage/:name/:jwt', function(req, res) {
 		}
 	})
 	.then((card) => {
+		let count;
 		console.log('Card is: ', card);
 		console.log('Should be rendering the `manageCard` view now...');
 
+		if(card['card_data'] && card['card_data'][0] && card['card_data'][0]['primary_label']) {
+			count = card['card_data'][0]['primary_label']
+				? card['card_data'][0]['primary_label']
+				: 0
+				;
+		} else {
+			count = 0;
+		}
+
 		res.render('manageCard', {
+			token: card['token'],
+			appId: card['app_id'],
+			cardId: card['card_id'],
 			cardName: card['name'],
 			cardUser: card['user_id'],
 			cardSite: card['site_id'],
 			cardHide: card['hidden'], 
-			cardlang: card['language'],
+			cardData: card['card_data'],
+			cardLang: card['language'],
 			cardVers: card['version'],
-			cardData: card['card_data']
+			cardCount: count
 		});
 	})
 	.catch((err) => {
@@ -111,20 +131,28 @@ router.get('/manage/:name/:jwt', function(req, res) {
 	*/
 });
 
-router.get('/update/:name', function(req, res) {
+router.post('/update/:name', function(req, res) {
 	// Reject if we don't have the data we need
-	if(!req.query.user || !req.query.site || !req.query.card) {
-		let err = new Error('Invalid Request: Must supply valid: user, site, and card IDs.');
+	let reqData = req.body;
+	if(!reqData.user || !reqData.site || !reqData.card) {
+		let err = new Error('Invalid Request: Must supply valid: user, site, card ID, and target amount to update the stat component.');
 		console.error(err);
 		res.status(400).send(err);
 	}
 
 	// Placeholder
 	let apiCard = new CardAPI({
-		card_id: req.query.card,
-		user_id: req.query.user,
-		site_id: req.query.site 
+		card_id: reqData.card,
+		user_id: reqData.user,
+		site_id: reqData.site 
 	});
+
+	let cardData = [
+		type: 'stat',
+		value: 'My Stat',
+		primary_value: reqData.targetCount,
+		primary_label: 'of stats'
+	];
 
 	// Load from the DB, could be done in the controller
 	let target = Card.findOne({
@@ -134,6 +162,11 @@ router.get('/update/:name', function(req, res) {
 	})
 	.exec()
 	.then((card) => {
+		if(!card) {
+			// We don't have a card in our DB (shouldn't be possible, but handle it as an error
+			res.status(404).send('Card for user and site not found');
+		} else {
+		}
 		let cardDataStatIndex = card.card_data.findIndex(function(element) {
 			return 'stat' === element.type && 'Counter' === element.primary_label;
 		});
