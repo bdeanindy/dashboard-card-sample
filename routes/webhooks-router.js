@@ -6,7 +6,7 @@ const path = require('path');
 const HMAC_Util = require('../utils/hmac');
 const mongoose = require('mongoose');
 const MANIFEST = require('../manifest');
-const CardController = require('../controllers/card');
+const CardAPI = require('../controllers/card');
 
 // Mongoose Models
 let Card = require('../models/card');
@@ -15,7 +15,7 @@ let Event = require('../models/event');
 /**
  * Callback URL as specified in `manifest.json`
  */
-router.post('/callback', function(req, res, next) {
+router.post('/callback', (req, res, next) => {
 	console.log(`POST request received at /webhooks${req.path}\n`);
 	//console.log(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
 	//console.log(`Data: ${JSON.stringify(req.body, null, 2)}`);
@@ -31,6 +31,9 @@ router.post('/callback', function(req, res, next) {
 	let comparisonString = JSON.stringify(comparisonObject);
 	if (!HMAC_Util.validateHmac(req.body.hmac, comparisonString, process.env.WEEBLY_CLIENT_SECRET)) {
 		res.status(400).send(new Error('HMAC does not match'));
+	} else {
+		console.log('Successfully verified HMAC of Webhook');
+		res.send(200);
 	}
 
 	let newEventData = {
@@ -54,7 +57,7 @@ router.post('/callback', function(req, res, next) {
 		Card.findOneAndUpdate({site_id: req.body.data.site_id, user_id: req.body.data.user_id}, {app_id: req.body.data.platform_app_id, card_id: req.body.data.platform_dashboard_card_id, version: req.body.data.platform_dashboard_card_version, language: req.body.data.language})
 		.then((updatedCard) => {
 			console.log('Card updated in DB. TODO: update it via Weebly API');
-			let myCard = new CardController({
+			let myCard = new CardAPI({
 				app_id: updatedCard.app_id,
 				site_id: updatedCard.site_id,
 				user_id: updatedCard.user_id,

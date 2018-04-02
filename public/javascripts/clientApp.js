@@ -36,6 +36,10 @@ $(document).ready(function() {
     let $bumpBtn = $('#bumpCount');
 
     $bumpBtn.on('click', function(evt) {
+        let $appData = $('#appData');
+        let loadingIcon = $('#loading');
+        // TODO Hide/Show as appropriate
+
         let $targetCount = $('#targetCount').val() || $('#currentCount').val() + 1;
         let $cardId = $('#cardId').val();
         let $siteId = $('#siteId').val();

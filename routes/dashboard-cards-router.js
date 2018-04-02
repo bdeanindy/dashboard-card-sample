@@ -17,7 +17,7 @@ const CardAPI = require('../controllers/card');
 /**
  * Callback URL as specified in `manifest.json`
  */
-router.get('/manage/:name/:jwt', function(req, res) {
+router.get('/manage/:name/:jwt', (req, res, next) => {
 	// Card name required to match up webhook events later
 	if(!req.params.name) {
 		let err = new Error('Invalid request, cardName path variable is required.');
@@ -43,8 +43,14 @@ router.get('/manage/:name/:jwt', function(req, res) {
 		res.status(403).send(err);
 	}
 
-	// SHOW LOADER WHILE WORKING
 	// GET CARD FROM THE API
+	let cardViaApi = new CardAPI({
+		site_id: decoded.site_id,
+		user_id: decoded.site_id,
+		card_name: req.params.name,
+		initialize: true,
+		token: req.app.token // TODO: Replace with more flexible version of this later
+	});
 	// DETERMINE STATE FROM card_data
 	// HIDE LOADER
 	// PRESENT TO USER
@@ -148,10 +154,12 @@ router.post('/update/:name', function(req, res) {
 	});
 
 	let cardData = [
-		type: 'stat',
-		value: 'My Stat',
-		primary_value: reqData.targetCount,
-		primary_label: 'of stats'
+		{
+			type: 'stat',
+			value: 'My Stat',
+			primary_value: reqData.targetCount,
+			primary_label: 'of stats'
+		}
 	];
 
 	// Load from the DB, could be done in the controller

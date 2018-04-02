@@ -15,20 +15,58 @@ const Card = module.exports = function(options = {}) {
 
     // Base Route for Card API
     this.APIBaseURL = `${weeblyAPI}/user/sites/${options.site_id}/cards`;
-
     this.app_id     = process.env.WEEBLY_CLIENT_ID;
     this.site_id    = options.site_id;
     this.user_id    = options.user_id;
     this.card_id    = options.card_id;
     this.card_data  = null;
     this.language   = null;
-    this.name       = null;
+    this.name       = options.card_name;
     this.version    = null;
     this.headers    = {
         'X-Weebly-Access-Token': options.token,
         'Content-Type': 'application/json',
         'Accepts': 'application/vnd.weebly.v1+json'
     };
+
+    if(options.initialize) {
+        return this.init(this.user_id, this.site_id, this.name, this.token);
+    }
+};
+
+Card.prototype.init = (user = this.user_id, site = this.site_id, cardName = this.name, cardId = this.cardId, token) => {
+    console.log('User: ', user);
+    console.log('Site: ', site);
+    console.log('Card Name: ', cardName);
+    console.log('Card ID: ', cardId);
+    if(!cardName && !cardId) {
+        let errMsg = new Error(`Unable to initialize Card via API, must provide either CardID or CardName`);
+        console.error(errMsg);
+        throw errMsg;
+    }
+
+    let cardIdentifier = cardId || cardName;
+
+    try {
+        request({
+                method: `GET`,
+                url: `${this.APIBaseURL}/${cardIdentifier}`,
+                headers: this.headers
+            },
+            function(err, response, body) {
+                if(err) {
+                    console.error(err);
+                } else {
+                    console.log('getDetails response body: ', body);
+                    // TODO: Update instance properties
+                    return(body);
+                }
+            }
+        );
+    } catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 // Retrieve the card details from Weebly Card API: https://dev.weebly.com/card-api.html 

@@ -13,9 +13,10 @@ const express = require('express');
 let WeeblyMiddleware = function(options) {
 	let clientId = process.env.WEEBLY_CLIENT_ID || options.client_id;
 	let secretKey = process.env.WEEBLY_CLIENT_SECRET || options.secret_key;
-	let allowedOrigins = ['https://www.weebly.com', 'https://editmysite.com', 'https://www.weebly.com/app/home/users/110864487/sites/369681026904144169/dashboard'];
+
 	// TODO Construct list of dynamic URIs where we accept CORS headers from (based on installed DBCard apps)
 	// Example URL for referer: https://www.weebly.com/app/home/users/110864487/sites/369681026904144169/dashboard
+	let allowedOrigins = ['https://www.weebly.com', 'https://editmysite.com', 'https://www.weebly.com/app/home/users/110864487/sites/369681026904144169/dashboard'];
 
 	return function(req, res, next) {
 		if (!clientId) {
