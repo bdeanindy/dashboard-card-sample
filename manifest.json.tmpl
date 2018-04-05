@@ -14,35 +14,19 @@
     },
     "dashboard_cards": [
         {
-            "name": "sample",
-            "version": "{{REPLACE_WITH_YOUR_SEMVER_ELEMENT_VERSION}}", // Should match app's `version` above
-            "label": "My Data",
+            "name": "helloworld",
+            "version": "1.0.0",
+            "label": "Tutorial",
             "icon": "dashboard_card_assets/icon.svg",
-            "link": "https://{{YOUR_DASHBOARD_CARD_APP_DOMAIN_AND_TLD}}/setup/:jwt",
+            "link": "{{REPLACE_WITH_YOUR_DB_CARD_MANAGEMENT_URL}}",
             "default": [
                 {
-                    "type": "text",
-                    "title": "Dashboard Text Content",
-                    "value": "Text content value"
-                },
-                {
-                "type": "group",
-                "label": "Sites",
-                "components": [{
-                    "type": "link",
-                    "label": "A published site",
-                    "value": "Published",
-                    "description": "mysitedomain.com",
-                    "link": "https://{{YOUR_DASHBOARD_CARD_APP_DOMAIN_AND_TLD}}"
-                },
-                {
-                    "type": "link",
-                    "label": "An unpublished site",
-                    "description": "mysitedomain.com",
-                    "link": "https://{{YOUR_DASHBOARD_CARD_APP_DOMAIN_AND_TLD}}"
-                }]
+                    "type": "welcome",
+                    "headline": "Hello World!",
+                    "text": "Setup your hello world card in a few easy steps",
+                    "action_label": "Get Started",
+                    "action_link": "{{REPLACE_WITH_YOUR_DB_CARD_MANAGEMENT_URL}}"
                 }
             ]
         }
-    ]
 }

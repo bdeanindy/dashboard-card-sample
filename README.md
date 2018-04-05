@@ -13,6 +13,13 @@ It is expected that you already have a Weebly Developer Account and can login to
 
 You will need to define a new Weebly App named `Hello World` to [Register a Weebly App](https://dev.weebly.com/register-your-app.html).
 
+To operate this library locally, you will need the following installed:
+
+* [Node.js](https://maven.apache.org/) - JavaScript runtime built on Chrome's V8 JavaScript Engine
+* [NPM.js](https://npmjs.org) - Leading package manager for JavaScript
+* [MongoDB](https://www.mongodb.com/) - NoSQL Database
+* [ngrok](https://ngrok.com/) - Secure public URLs for local apps
+
 ### Get the Code
 
 There are two ways you can get the code onto your local workstation.
@@ -50,7 +57,17 @@ Now that you have the code on your workstation, and your new Weebly App API Keys
 
 1. Open [manifest.json.tmpl](/manifest.json.tmpl) and replace/update all values wrapped in double-braces, such as: `{{WEEBLY_CLIENT_ID}}` with the appropriate values from the app you created as a prerequisite.
 2. Rename the file to `manifest.json` and save the changes.
-3. Next, open the [Weebly Developer Admin](https://www.weebly.com/developer-admin), login if you are not already, and click on the "Dashboard Card" app if it is not already open
+3. Rename the `env.tmpl` file to `.env`, open the file, and replace the values with your own as indicated
+4. Next, open the [Weebly Developer Admin](https://www.weebly.com/developer-admin), login if you are not already, and click on the "Dashboard Card" app if it is not already open
+
+## Running Locally
+
+Install the dependencies: `npm install`
+
+1. Get ngrok started, and replace the values where needed in the `.env` file (update your manifest as well if needed)
+2. Start the app `npm start` (you'll need Mongo running if it is not already)
+3. Install the app from the [Developer Portal Admin](https://www.weebly.com/developer-admin/) into your Developer Test Site
+4. Once app installation is complete, click the header of the new dashboard card and watch data in the [NGROK inspector](http://localhost:4040)
 
 ## Deployment
 
@@ -66,6 +83,10 @@ Now that you have the code on your workstation, and your new Weebly App API Keys
 * [Github](https://github.com)
 * [Node.js](https://maven.apache.org/) - JavaScript runtime built on Chrome's V8 JavaScript Engine
 * [NPM.js](https://npmjs.org) - Leading package manager for JavaScript
+* [Express.js](https://expressjs.org) - Node.js Based Web Server
+* [MongoDB](https://www.mongodb.com/) - NoSQL Database
+* [Mongoose](http://mongoosejs.com/) - Node.js Object Modeling for MongoDB
+* [ngrok](https://ngrok.com/) - Secure public URLs for local apps
 * [NVM](https://github.com/creationix/nvm) - Leading Node Version Manager
 
 ## Contributing
