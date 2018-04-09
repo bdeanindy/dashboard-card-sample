@@ -5,7 +5,7 @@ const request = require('request');
 const CardModel = require('../models/card');
 
 // Vars
-const weeblyAPI  = process.env.MY_API_BASE_URI;
+const weeblyAPI  = process.env.WEEBLY_API_BASE_URI;
 
 /**
  * Weebly Card
@@ -30,6 +30,7 @@ const Card = module.exports = function(options = {}) {
     };
 
     if(options.initialize) {
+        console.log('Should be initializing the Card...');
         return this.init(this.user_id, this.site_id, this.name, this.token);
     }
 };
@@ -46,11 +47,14 @@ Card.prototype.init = (user = this.user_id, site = this.site_id, cardName = this
     }
 
     let cardIdentifier = cardId || cardName;
+    let baseURI = this.APIBaseURL;
+    console.log('cardIdentifier in Card Controller.init(): ', cardIdentifier);
+    console.log('baseURI: ', baseURI);
 
     try {
         request({
                 method: `GET`,
-                url: `${this.APIBaseURL}/${cardIdentifier}`,
+                url: `${baseURI}/${cardIdentifier}`,
                 headers: this.headers
             },
             function(err, response, body) {

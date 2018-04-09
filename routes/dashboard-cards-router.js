@@ -138,6 +138,7 @@ router.get('/manage/:name/:jwt', (req, res, next) => {
 });
 
 router.post('/update/:name', function(req, res) {
+	console.log('/update/{{name}} route called');
 	// Reject if we don't have the data we need
 	let reqData = req.body;
 	if(!reqData.user || !reqData.site || !reqData.card) {
@@ -145,6 +146,8 @@ router.post('/update/:name', function(req, res) {
 		console.error(err);
 		res.status(400).send(err);
 	}
+
+	console.log('Client site provided request data: ', reqData);
 
 	// Placeholder
 	let apiCard = new CardAPI({
