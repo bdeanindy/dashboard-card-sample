@@ -1,61 +1,45 @@
 "use strict";
 
-const Card = require('../models/card');
-const fs = require('fs');
 const JWT = require('jsonwebtoken');
-const path = require('path');
-const mongoose = require('mongoose');
+const CardController = require('../controllers/card');
 const router = require('express').Router();
-const manifest = require('../manifest');
-const CardAPI = require('../controllers/card');
-
-/** TODO
-	* Abstract JWT into its own module
-	* Use Promises (or async/await) over callbacks
-**/
 
 /**
  * Callback URL as specified in `manifest.json`
  */
 router.get('/manage/:name/:jwt', (req, res, next) => {
-	// Card name required to match up webhook events later
-	if(!req.params.name) {
-		let err = new Error('Invalid request, cardName path variable is required.');
-		console.error(err);
-		res.status(400).send(err);
+	try {
+		// Card name required to match up webhook events later
+		if(!req.params.name) {
+			let err = new Error('Invalid request, cardName path variable is required.');
+			console.error(err);
+			res.status(400).send(err);
+		}
+
+		// We must have a JWT in order to lookup the Dashboard Card's configurations for the user
+		if(!req.params.jwt) {
+			let err = new Error('Invalid request, JWT path variable is required.');
+			console.error(err);
+			res.status(400).send(err);
+		}
+
+		// Verify JWT came from the source we expect
+		let decoded = JWT.verify(req.params.jwt, req.app.secretKey, {algorithms: "HS256", maxAge: "1h"}); // If this breaks, might need to pass the secretKey parameter as Base64 buffer: `Buffer.from(req.app.secretKey, 'base64')`
+
+		// Handle errors validating the JWT
+		if(!decoded) {
+			// POTENTIAL SECURITY VULNERABILITY: Must not proceed if you cannot verify the JWT 
+			let err = new Error(`Unable to verify the JWT, cannot proceed`);
+			console.error(err);
+			res.status(403).send(err);
+		}
+	} catch(e) {
+		console.error(e);
+		return res.status(500).send(err);
 	}
-
-	// We must have a JWT in order to lookup the Dashboard Card's configurations for the user
-	if(!req.params.jwt) {
-		let err = new Error('Invalid request, JWT path variable is required.');
-		console.error(err);
-		res.status(400).send(err);
-	}
-
-	// Verify the JWT
-	let decoded = JWT.verify(req.params.jwt, req.app.secretKey, {algorithms: "HS256", maxAge: "1h"}); // If this breaks, might need to pass the secretKey parameter as Base64 buffer: `Buffer.from(req.app.secretKey, 'base64')`
-
-	// Handle error validating JWT
-	if(!decoded) {
-		// POTENTIAL SECURITY VULNERABILITY: Must not proceed if you cannot verify the JWT 
-		let err = new Error(`Unable to verify the JWT, cannot proceed`);
-		console.error(err);
-		res.status(403).send(err);
-	}
-
-	// GET CARD FROM THE API
-	let cardViaApi = new CardAPI({
-		site_id: decoded.site_id,
-		user_id: decoded.site_id,
-		card_name: req.params.name,
-		initialize: true,
-		token: req.app.token // TODO: Replace with more flexible version of this later
-	});
-	// DETERMINE STATE FROM card_data
-	// HIDE LOADER
-	// PRESENT TO USER
 
 	// First, try to load from the DB 
+	/*
 	Card.findOne({
 		site_id: decoded.site_id,
 		user_id: decoded.user_id,
@@ -116,24 +100,6 @@ router.get('/manage/:name/:jwt', (req, res, next) => {
 		console.error(err);
 		throw err;
 	});
-
-	/*
-	currentCard.refresh((err, data) => {
-		if(err) {
-			console.error(err);
-			res.status(err.statusCode).send(err);
-		} else {
-			console.log('Refreshed Data: ', data);
-			// Success, render the dashboard card management UI
-			res.render('manageCard', {
-				user: decoded.user_id,
-				site: decoded.site_id,
-				jti: decoded.jti,
-				iat: decoded.iat,
-				card: data.name
-			});
-		}
-	});
 	*/
 });
 
@@ -149,13 +115,6 @@ router.post('/update/:name', function(req, res) {
 
 	console.log('Client site provided request data: ', reqData);
 
-	// Placeholder
-	let apiCard = new CardAPI({
-		card_id: reqData.card,
-		user_id: reqData.user,
-		site_id: reqData.site 
-	});
-
 	let cardData = [
 		{
 			type: 'stat',
@@ -166,6 +125,7 @@ router.post('/update/:name', function(req, res) {
 	];
 
 	// Load from the DB, could be done in the controller
+	/*
 	let target = Card.findOne({
 		site_id: decoded.site_id,
 		user_id: decoded.user_id,
@@ -201,7 +161,7 @@ router.post('/update/:name', function(req, res) {
 		console.error(err);
 		throw err;
 	});
-
+	*/
 });
 
 /**

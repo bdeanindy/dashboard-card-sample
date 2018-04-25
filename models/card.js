@@ -18,6 +18,7 @@ let CardSchema = new mongoose.Schema({
     version: String,
     language: String,
     count: Number,
+    active: Boolean,
     card_data: [{}]
 }, schemaOptions);
 

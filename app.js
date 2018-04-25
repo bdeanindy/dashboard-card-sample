@@ -12,10 +12,10 @@ const cookieParser		= require('cookie-parser');
 const bodyParser		= require('body-parser');
 
 // CUSTOM WEEBLY MIDDLEWARE AND ROUTERS
-const WeeblyMiddleware		= require('./middleware/weebly.js');
-const oauthRouter			= require('./routes/oauth-router.js');
-const webhooksRouter		= require('./routes/webhooks-router.js');
-const dashboardCardsRouter	= require('./routes/dashboard-cards-router.js');
+const WeeblyMiddleware	= require('./middleware/weebly.js');
+const oauthRouter		= require('./routes/oauth.js');
+const webhooksRouter	= require('./routes/webhooks.js');
+const cardsRouter		= require('./routes/cards.js');
 
 // MongoDB Connection
 const mongoose = require('mongoose');
@@ -63,7 +63,7 @@ const wMiddleware = new WeeblyMiddleware({
 **/
 app.use('/oauth', wMiddleware, oauthRouter);
 app.use('/webhooks', wMiddleware, webhooksRouter);
-app.use('/cards', wMiddleware, dashboardCardsRouter);
+app.use('/cards', wMiddleware, cardsRouter);
 
 mongoose.connect('mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PW + '@' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB)
 	.then(() => console.log('connection successful'))
