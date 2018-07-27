@@ -2,136 +2,117 @@
 
 const crypto = require('crypto');
 const request = require('request');
-const CardModel = require('../models/card');
+
+// NOTE - WEEBLY API is ONLY FOR OPERATING WITH THE API DATA
 
 // Vars
-const weeblyAPI  = process.env.WEEBLY_API_BASE_URI;
+const weeblyApiBaseUrl  = process.env.WEEBLY_API_BASE_URI;
 
-/**
- * Weebly Card
- */
-const Card = module.exports = function(options = {}) {
-    console.log('Instantiate New Card options argument: ', options);
-
-    // Base Route for Card API
-    this.APIBaseURL = `${weeblyAPI}/user/sites/${options.site_id}/cards`;
-    this.app_id     = process.env.WEEBLY_CLIENT_ID;
-    this.site_id    = options.site_id;
-    this.user_id    = options.user_id;
-    this.card_id    = options.card_id;
-    this.card_data  = null;
-    this.language   = null;
-    this.name       = options.card_name;
-    this.version    = null;
-    this.headers    = {
-        'X-Weebly-Access-Token': options.token,
-        'Content-Type': 'application/json',
-        'Accepts': 'application/vnd.weebly.v1+json'
-    };
-
-    if(options.initialize) {
-        console.log('Should be initializing the Card...');
-        return this.init(this.user_id, this.site_id, this.name, this.token);
-    }
+exports.getCardList = (options) => {
+    return new Promise((resolve, reject) => {
+        let cardEndpoint = `${weeblyApiBaseUrl}/user/sites/${options.site_id}/cards`;
+        let requestOptions = {
+            method: `GET`,
+            url: cardEndpoint,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.weebly.v1+json',
+                'X-Weebly-Access-Token': options.token
+            }
+        };
+        request(requestOptions,
+        function(err, response, body) {
+            if(err) {
+                console.error(err);
+                return reject(err);
+            } else {
+                console.log('getList response body: ', body);
+                resolve(body);
+            }
+        });
+    });
 };
 
-Card.prototype.init = (user = this.user_id, site = this.site_id, cardName = this.name, cardId = this.cardId, token) => {
-    console.log('User: ', user);
-    console.log('Site: ', site);
-    console.log('Card Name: ', cardName);
-    console.log('Card ID: ', cardId);
-    if(!cardName && !cardId) {
-        let errMsg = new Error(`Unable to initialize Card via API, must provide either CardID or CardName`);
-        console.error(errMsg);
-        throw errMsg;
-    }
-
-    let cardIdentifier = cardId || cardName;
-    let baseURI = this.APIBaseURL;
-    console.log('cardIdentifier in Card Controller.init(): ', cardIdentifier);
-    console.log('baseURI: ', baseURI);
-
-    try {
+// Retrieve the card details from Weebly Card API by card_id: https://dev.weebly.com/card-api.html 
+exports.getCardById = (options) => {
+    return new Promise((resolve, reject) => {
+        let cardEndpoint = `${weeblyApiBaseUrl}/user/sites/${options.site_id}/cards/${options.card_id}`;
         request({
                 method: `GET`,
-                url: `${baseURI}/${cardIdentifier}`,
-                headers: this.headers
+                url: cardEndpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.weebly.v1+json',
+                    'X-Weebly-Access-Token': options.token
+                }
+            },
+            function(err, response, body) {
+                if(err) {
+                    console.error('COULD NOT GET CARD BY ID: ', err);
+                    return reject(err, body);
+                } else {
+                    console.log('getDetailsById response body: ', body);
+                    return resolve(body);
+                }
+            }
+        );
+    });
+};
+
+// Retrieve the card details from Weebly Card API by name: https://dev.weebly.com/card-api.html 
+exports.getCardByName = (options) => {
+    return new Promise((resolve, reject) => {
+        let cardEndpoint = `${weeblyApiBaseUrl}/user/sites/${options.site_id}/cards/${options.name}`;
+        request({
+                method: `GET`,
+                url: cardEndpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.weebly.v1+json',
+                    'X-Weebly-Access-Token': options.token
+                }
+            },
+            function(err, response, body) {
+                if(err) {
+                    console.error('COULD NOT GET CARD BY NAME: ', err);
+                    return reject(err, body);
+                } else {
+                    console.log('getDetailsByName response body: ', body);
+                    resolve(body);
+                }
+            }
+        );
+    });
+};
+
+exports.updateCard = (options = {}) => {
+    // TODO Improve this by using destructuring and spread params???
+    if(!options.card_id || !options.token || !options.site_id || !options.data) {
+        let updateErr = new Error('Missing one or more required arguments to weebly/card.update()');
+        console.error(updateErr);
+        throw updateErr;
+    }
+    return new Promise((resolve, reject) => {
+        let cardEndpoint = `${weeblyApiBaseUrl}/user/sites/${options.site_id}/cards/${options.card_id}`;
+        request({
+                method: `PATCH`,
+                url: cardEndpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.weebly.v1+json',
+                    'X-Weebly-Access-Token': options.token
+                },
+                data: options.data
             },
             function(err, response, body) {
                 if(err) {
                     console.error(err);
+                    return reject(err, body);
                 } else {
-                    console.log('getDetails response body: ', body);
-                    // TODO: Update instance properties
-                    return(body);
+                    console.log('update response body: ', body);
+                    resolve(body);
                 }
             }
         );
-    } catch(err) {
-        console.error(err);
-        throw err;
-    }
-};
-
-// Retrieve the card details from Weebly Card API: https://dev.weebly.com/card-api.html 
-Card.prototype.getDetails = (cb) => {
-    request({
-            method: `GET`,
-            url: `${this.APIBaseURL}/${this.card_id}`,
-            headers: this.headers
-        },
-        function(err, response, body) {
-            if(err) {
-                console.error(err);
-                cb(err, data);
-            } else {
-                console.log('getDetails response body: ', body);
-                // TODO: Update instance properties
-                cb(null, body);
-            }
-        }
-    );
-};
-
-Card.prototype.update = (data, cb) => {
-    request({
-            method: `PATCH`,
-            url: `${this.APIBaseURL}/${this.card_id}`,
-            headers: this.headers,
-            data: data
-        },
-        function(err, response, body) {
-            if(err) {
-                console.error(err);
-                cb(err, body);
-            } else {
-                console.log('update response body: ', body);
-                cb(null, body);
-            }
-        }
-    );
-};
-
-Card.prototype.refresh = (cb) => {
-    request({
-            method: `GET`,
-            url: `${this.APIBaseURL}/${this.card_id}`,
-            headers: this.headers
-        },
-        function(err, response, body) {
-            if(err) {
-                console.error(err);
-                cb(err, data);
-            } else {
-                console.log('getDetails response body: ', body);
-                this.card_id = body.card_id;
-                this.name = body.name;
-                this.hidden = body.hidden;
-                this.card_data = body.card_data;
-                this.language = body.language;
-                this.version = body.version;
-                cb(null, body);
-            }
-        }
-    );
+    });
 };

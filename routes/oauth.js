@@ -8,6 +8,8 @@ const querystring = require('querystring');
 const HMAC_Util = require('../utils/hmac');
 const OAuth = require('../models/oauth');
 
+// TODO: Simplify this by placing almost everything here into the OAuth Controller
+
 /**
  * Initial OAuth endpoint as specified in `manifest.json`.
  */

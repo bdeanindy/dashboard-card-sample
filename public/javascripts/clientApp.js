@@ -33,19 +33,14 @@ $(document).ready(function() {
     // LOADING ICON SHOWN BY DEFAULT, `appData` HIDDEN BY DEFAULT
 
     // Handle proxying the bump in DBCard Counter
-    let $bumpBtn = $('#bumpCount');
+    let $configureBtn = $('button#configureCard');
 
-    $bumpBtn.on('click', function(evt) {
+    $configureBtn.on('click', function(evt) {
         let $appData = $('#appData');
         let loadingIcon = $('#loading');
         // TODO Hide/Show as appropriate
 
-        let $targetCount = $('#targetCount').val() || $('#currentCount').val() + 1;
-        let $cardId = $('#cardId').val();
-        let $siteId = $('#siteId').val();
-        let $userId = $('#userId').val();
-
-        let jqxhr = $.post('/cards/update/helloworld' {card: $cardId, site: $siteId, user: $userId, targetCount: $targetCount}), function(response) {
+        let jqxhr = $.post('/cards/configure/helloworld' {card: $cardId, site: $siteId, user: $userId, targetCount: $targetCount}), function(response) {
             $('#currentCount').val(response.count);
         })
         .fail(function() {
