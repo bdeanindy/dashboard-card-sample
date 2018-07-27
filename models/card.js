@@ -23,8 +23,6 @@ let CardSchema = new mongoose.Schema({
     },
     app_id: {
         type: String,
-        index: true,
-        required: true
     },
     token: String,
     card_id: {
@@ -53,15 +51,19 @@ let CardSchema = new mongoose.Schema({
     },
     count: {
         type: Number,
-        default: 1,
-        min: 1
+        default: 0,
+        min: 0 
+    },
+    configured: {
+        type: Boolean,
+        default: false
     },
     active: {
         type: Boolean,
         default: true,
         required: true
     },
-    card_data: [{}]
+    data: [{}]
 }, schemaOptions);
 
 CardSchema.query.bySiteId = function(siteId) {
@@ -77,9 +79,3 @@ CardSchema.query.byUserId = function(userId) {
 };
 
 let Card = module.exports = mongoose.model('Card', CardSchema);
-
-/*
-Card.init().then((Card) => {
-    console.log('Card.init()');
-});
-*/

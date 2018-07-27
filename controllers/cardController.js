@@ -104,7 +104,28 @@ exports.manage = async (params = {}) => {
     let dbCard;
 
     try {
-        OAuth.findOne({user_id: params.user_id, site_id: params.site_id})
+        let auth = await OAuth.findOne({user_id: params.user_id, site_id: params.site_id})
+        let dbCard = await Card.findOne(params);
+
+        console.log('Auth: ', auth);
+        console.log('DB Card: ', dbCard);
+
+        if(!dbCard) {
+            console.log('No Card exists in the DB for this site and user, retrieving data from Weebly API');
+            let apiCard = await WeeblyCardAPI.getCardByName({site_id: params.site_id, name: params.name, token: auth.token});
+            console.log('API Card: ', apiCard);
+            apiCard = JSON.parse(apiCard); apiCard.user_id = params.user_id;
+            apiCard.site_id = params.site_id;
+            apiCard.app_id = auth.app_id;
+            console.log('DATA BEING SEND TO CREATE NEW API CARD: ', apiCard);
+            dbCard = await Card.create(apiCard);
+        }
+
+        console.log('Found a Card in the DB that matched, returning it for rendering in the management UI...');
+
+        return dbCard;
+
+        /*
         .then((authFromDB) => {
             auth = authFromDB;
             console.log('AUTH INFO FOUND FOR SITE AND USER INSTALLATION: ', auth);
@@ -114,6 +135,7 @@ exports.manage = async (params = {}) => {
                 return invalidParamsError;
             }
         });
+        */
     } catch(e) {
         console.error(e);
         throw e;
@@ -125,6 +147,7 @@ exports.manage = async (params = {}) => {
     //  - We do NOT have an associated card in the DB for this site/user
     //  - User has installed the app, but has NOT configured this dashboard card to display a "Count" stat component.
     // Display: Successful installation  message, button to configure the app (create a new Stat Component for the card), and a button to skip this and return to the editor.
+    /*
     try {
         console.log('GETTING CARD FROM DB IF EXISTS...');
         dbCard = await Card.findOne(params);
@@ -143,6 +166,7 @@ exports.manage = async (params = {}) => {
         console.error(e);
         throw e;
     }
+    */
 
     // Handle 3rd use case - When a user clicks the "header" for this dashboard card
     // Condition(s):

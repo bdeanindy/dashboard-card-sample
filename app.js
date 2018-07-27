@@ -65,7 +65,7 @@ app.use('/oauth', wMiddleware, oauthRouter);
 app.use('/webhooks', wMiddleware, webhooksRouter);
 app.use('/cards', wMiddleware, cardsRouter);
 
-mongoose.connect('mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PW + '@' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB)
+mongoose.connect('mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PW + '@' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB, {useNewUrlParser: true})
 	.then(() => console.log('connection successful'))
 	.catch((err) => console.error(err))
 	;

@@ -55,10 +55,39 @@ router.get('/manage/:name/:jwt', (req, res, next) => {
 			// Handle no card returned, or card not configured
 			res.render('manageCard', decoded);
 		} else {
+			/**
+				Card From DB
+				{
+					hidden: false,
+					version: '1.0.0',
+					language: 'en-us',
+					count: 1,
+					active: true,
+					data: [],
+					_id: 5b5b92beeb7d2e93f2a9894e,
+					card_data: [],
+					card_id: '900749780762366038',
+					name: 'helloworld',
+					user_id: '110864487',
+					site_id: '369681026904144169',
+					createdAt: 2018-07-27T21:46:38.038Z,
+					updatedAt: 2018-07-27T21:46:38.038Z,
+					__v: 0
+				}
+			**/
 			// Handle a card being returned
-			// TODO Cleanse out data we do not wish to expose for security reasons
+			// Cleanse out data we do not wish to expose for security reasons
+			let cleansedCard = {
+				name: card.name,
+				data: card.data,
+				user_id: card.user_id,
+				site_id: card.site_id,
+				count: card.count,
+				createdAt: card.createdAt,
+				lastUpdated: card.updatedAt
+			};
 			// Use the token on the front-end to handle updating the Card API there...??? (if not, should remove it to prevent bad habits)
-			res.render('manageCard', card);
+			res.render('manageCard', {card: cleansedCard});
 		}
 	})
 	.catch((e) => {

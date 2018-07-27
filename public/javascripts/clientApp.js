@@ -36,11 +36,11 @@ $(document).ready(function() {
     let $configureBtn = $('button#configureCard');
 
     $configureBtn.on('click', function(evt) {
+        // TODO Hide/Show as appropriate
         let $appData = $('#appData');
         let loadingIcon = $('#loading');
-        // TODO Hide/Show as appropriate
 
-        let jqxhr = $.post('/cards/configure/helloworld' {card: $cardId, site: $siteId, user: $userId, targetCount: $targetCount}), function(response) {
+        let jqxhr = $.post('/cards/configure/helloworld', {card: $cardId, site: $siteId, user: $userId, targetCount: $targetCount}), function(response) {
             $('#currentCount').val(response.count);
         })
         .fail(function() {
