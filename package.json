@@ -16,7 +16,7 @@
         "express": "~4.15.2",
         "hbs": "~4.0.1",
         "jsonwebtoken": "^5.4.0",
-        "mongoose": "^5.0.9",
+        "mongoose": "^5.2.5",
         "morgan": "~1.8.1",
         "needle": "^0.10.0",
         "npm": "^5.8.0",
