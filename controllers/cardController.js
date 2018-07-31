@@ -92,15 +92,16 @@ exports.manage = async (params = {}) => {
 
         // Handle new card (should contain a `welcome` component only)
         if(!dbCard) {
-            console.log('No Card exists in the DB for this site and user, retrieving data from Weebly API');
+            console.log('No ACTIVE Card exists in the DB for this site and user, retrieving data from Weebly API');
             let apiCard = await WeeblyCardAPI.getCardByName({site_id: params.site_id, name: params.name, token: auth.token});
-            console.log('Data from the API Card: ', apiCard);
-            apiCard = JSON.parse(apiCard); apiCard.user_id = params.user_id;
+            console.log('Data from Weebly Card API: ', apiCard);
+            apiCard = JSON.parse(apiCard);
+            apiCard.user_id = params.user_id;
             apiCard.site_id = params.site_id;
             apiCard.app_id = auth.app_id;
-            console.log('Data used to create new API Card in the DB from the API: ', apiCard);
+            console.log('Create new Card in MongoDB supplying this data: ', apiCard);
             dbCard = await Card.create(apiCard);
-            console.log('New card has been created in the DB, returning it to be rendered in the manage UI...');
+            console.log('New card has been created in the DB, returning it to be rendered in the welcome UI...');
         } else {
             console.log('Found a Card in the DB that matched, returning it for rendering in the management UI...');
         }

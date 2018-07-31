@@ -27,9 +27,9 @@ router.get('/manage/:name/:jwt', (req, res, next) => {
 
 	// The card name must be valid and known by the app
 	if(!req.params.name || process.env.WEEBLY_DASHBOARD_CARD_NAME !== req.params.name) {
-		let err = new Error('Invalid dashboard card path variable.');
+		let err = new Error('Invalid dashboard card name provided in request.');
 		console.error(err);
-		res.status(400).send(err);
+		res.status(404).send(err);
 	}
 
 	// TODO: Abstract JWT verification into its own module to DRY this out
@@ -54,32 +54,10 @@ router.get('/manage/:name/:jwt', (req, res, next) => {
 	.then((card) => {
 		console.log('card: ', card);
 		if(!card) {
-			// Sanity check
-			// Handle no card in the db (which equates to: card not configured)
+			// Card is not configured (or does not exist in the DB yet), render the Welcome View
 			res.render('welcomeCard', decoded);
 		} else {
-			/**
-				Card From DB
-				{
-					hidden: false,
-					version: '1.0.0',
-					language: 'en-us',
-					count: 1,
-					active: true,
-					data: [],
-					_id: 5b5b92beeb7d2e93f2a9894e,
-					card_data: [],
-					card_id: '900749780762366038',
-					name: 'helloworld',
-					user_id: '110864487',
-					site_id: '369681026904144169',
-					createdAt: 2018-07-27T21:46:38.038Z,
-					updatedAt: 2018-07-27T21:46:38.038Z,
-					__v: 0
-				}
-			**/
-			// Handle a card being returned
-			// Cleanse out data we do not wish to expose for security reasons
+			// Strip data we do not wish to expose for security reasons
 			let cleansedCard = {
 				name: card.name,
 				data: card.data,
@@ -89,7 +67,6 @@ router.get('/manage/:name/:jwt', (req, res, next) => {
 				createdAt: card.createdAt,
 				lastUpdated: card.updatedAt
 			};
-			// Use the token on the front-end to handle updating the Card API there...??? (if not, should remove it to prevent bad habits)
 			res.render('manageCard', {card: cleansedCard});
 		}
 	})
@@ -129,48 +106,6 @@ router.post('/configure/:name', function(req, res) {
 
 	console.log('Client site provided request data: ', reqData);
 
-});
-
-// This should only ever be displayed when a user clicks the "Get Started" button in the Welcome Component of the Dashboard Card
-router.get('/welcome/:name/:jwt', function(req, res) {
-	console.log(`Request received at: ${req.path}`);
-	// Card name required to match up webhook events later
-	if(!req.params.name) {
-		let err = new Error('Invalid request, cardName path variable is required.');
-		console.error(err);
-		res.status(400).send(err);
-	}
-
-	// We must have a JWT in order to lookup the Dashboard Card's configurations for the user
-	if(!req.params.jwt) {
-		let err = new Error('Invalid request, JWT path variable is required.');
-		console.error(err);
-		res.status(400).send(err);
-	}
-
-	// The card name must be valid and known by the app
-	if(!req.params.name || process.env.WEEBLY_DASHBOARD_CARD_NAME !== req.params.name) {
-		let err = new Error('Invalid dashboard card path variable.');
-		console.error(err);
-		res.status(400).send(err);
-	}
-
-	// TODO: DRY this out
-	// Verify JWT came from the source we expect
-	let decoded = JWT.verify(req.params.jwt, req.app.secretKey, {algorithms: "HS256", maxAge: "1h"}); // If this breaks, might need to pass the secretKey parameter as Base64 buffer: `Buffer.from(req.app.secretKey, 'base64')`
-	console.log('DECODED JWT: ', decoded);
-
-	// Handle errors validating the JWT
-	if(!decoded) {
-		// POTENTIAL SECURITY VULNERABILITY: Must not proceed if you cannot verify the JWT 
-		let err = new Error(`Unable to verify the JWT, cannot proceed`);
-		console.error(err);
-		res.status(403).send(err);
-	} else {
-		// NOTE: Perform additional operations as needed
-		// TODO: Must have a valid and active installation for this user/site, else display forbidden message
-		res.render('welcomeCard', decoded);
-	}
 });
 
 /**
