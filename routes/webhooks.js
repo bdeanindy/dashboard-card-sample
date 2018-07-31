@@ -92,6 +92,20 @@ router.post('/callback', (req, res, next) => {
 		console.log('App has been uninstalled, remove card from the DB');
 		// Send this request to appController for handling
 		AppController.handleUninstallEvent(req.body);
+		/** Event.data for Reference
+		{
+			"client_id": "XXXXXXXXXX",
+			"client_version": "2.0.0",
+			"event": "app.uninstall",
+			"timestamp": 1533000982,
+			"data": {
+				"user_id": "XXXXXXXXX",
+				"site_id": "XXXXXXXXXXXXXXXXXX",
+				"platform_app_id": "XXXXXXXXXX"
+			},
+			"hmac": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+		}
+		**/
 	}
 
 	if('user.update' === req.body['event']) {
