@@ -69,7 +69,7 @@ router.get('/phase-one', function(req, res) {
 });
 
 /**
- * Secondary OAuth endpoint as specified by `phaseTwoLink` in the phase one endpoint
+ * Secondary phase of oauth, where we receive an authorization code and exchange for an access token
  */
 router.get('/phase-two', function(req, res) {
 	//console.log(`\nPhase two of redirect has been initiated\n`);
@@ -80,7 +80,7 @@ router.get('/phase-two', function(req, res) {
 	let accessToken;
 
     // we have our authorization code.
-    // now we make a request toe xchange it for a token.
+    // now we make a request to exchange it for a token.
 	needle.post(req.query.callback_url, {
 		client_id: clientId,
 		client_secret: secretKey,
@@ -94,15 +94,16 @@ router.get('/phase-two', function(req, res) {
 
 		let payload = JSON.parse(response.body);
 
-		// we have the token. you can store this wherever
+		// we have the token. store this in the database (constitutes an app installation)
 		req.app.token = payload.access_token;
 
-		// Update the OAuth Item in Mongo
+		// Update the Installation in MongoDB
 		let oauthQuery = { site_id: req.query.site_id, user_id: req.query.user_id};
 		OAuth.findOneAndUpdate(oauthQuery, {token: payload.access_token, active: true})
 		.then((install) => {
 			console.log('We have a token!');
 			console.log('Install: ', install);
+			// TODO: Improvement Idea - Service Worker Thread to stub out the account/user/dashboard card/etc...
 			return install;
 		})
 		.catch((err) => {

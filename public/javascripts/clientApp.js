@@ -39,9 +39,11 @@ $(document).ready(function() {
         // TODO Hide/Show as appropriate
         let $appData = $('#appData');
         let loadingIcon = $('#loading');
+        let $siteId = $('#configureCard').data('siteId');
+        let $userId = $('#configureCard').data('userId');
 
-        let jqxhr = $.post('/cards/configure/helloworld', {card: $cardId, site: $siteId, user: $userId, targetCount: $targetCount}), function(response) {
-            $('#currentCount').val(response.count);
+        let jqxhr = $.post('/cards/configure/helloworld', {site_id: $siteId, user_id: $userId}), function(response) {
+            console.log(response);
         })
         .fail(function() {
             console.log(response);

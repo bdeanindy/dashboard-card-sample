@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const MANIFEST = require('../manifest');
 const CardController = require('../controllers/cardController'); // Handles both cards collection in DB, and Weebly Card API Interactions
 //const EventController = require('../controllers/eventController'); TODO: Implement later
-//const AppController = require('../controllers/appController'); TODO: Implement later
+const AppController = require('../controllers/appController'); // TODO: Implement later
 
 // Mongoose Models
 let Event = require('../models/event'); // TODO: Move this into the eventController once implemented
@@ -48,10 +48,12 @@ router.post('/callback', (req, res, next) => {
 	console.log(`POST request received at ${req.path}\n`);
 	console.log(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
 	console.log(`Data: ${JSON.stringify(req.body, null, 2)}`);
+	let responseCode = 200;
+	let responseMessage = 'Successfully received';
 
 	// Validate event request from Weebly
 	if(!isValidWebhookRequest(req)) {
-		res.status(400).send(new Error('HMAC does not match'));
+		responseCode = 400;
 	}
 
 	// Prepare event data for storage in the DB
@@ -89,58 +91,20 @@ router.post('/callback', (req, res, next) => {
 	if('app.uninstall' === req.body['event']) {
 		console.log('App has been uninstalled, remove card from the DB');
 		// Send this request to appController for handling
+		AppController.handleUninstallEvent(req.body);
 	}
 
-
-		// Upsert card into DB: user_id, site_id, app_id, token, card_id, name, hidden, version, language, count, active, card_data
-		/*
-		Card.findOneAndUpdate({
-				site_id: req.body.data.site_id,
-				user_id: req.body.data.user_id}, 
-			{
-				user_id: req.body.data.user_id,
-				site_id: req.body.data.site_id,
-				name: req.body.data.name,
-				app_id: req.body.data.platform_app_id,
-				card_id: req.body.data.platform_dashboard_card_id,
-				version: req.body.data.platform_dashboard_card_version, 
-				language: req.body.data.language
-			},
-			{
-				new: true,
-				upsert: true,
-				setDefaultsOnInsert: true
-			})
-		.then((updatedCard) => {
-			
-		// Update card in Weebly API if it already existed
-			console.log(`Card from DB: ${updatedCard}`);
-			if(updatedCard.card_data) {
-				let cardDataFromDB = JSON.parse(updatedCard.card_data);
-			}
-			console.log(`cardDataFromDB: ${cardDataFromDB}`);
-			if(cardDataFromDB.count) {
-				let tmpCount = cardDataFromDB.count + 1;
-			}
-			// Update card in Weebly API
-			let myCard = new CardAPI({
-				app_id: updatedCard.app_id,
-				site_id: updatedCard.site_id,
-				user_id: updatedCard.user_id,
-				card_id: updatedCard.card_id,
-				card_data: updatedCard.card_data,
-				language: updatedCard.language,
-				name: updatedCard.name,
-				version: updatedCard.version
-			});
-		})
-		.catch((err) => {
-			console.error(err);
-		});
-		*/
+	if('user.update' === req.body['event']) {
+		// Send this request to userController for handling
+		UserController.handleUpdateEvent(req.body);
+	}
 
 	// We don't want a bunch of retries, so respond positively to all events without errors
-	res.status(200).send('Successfully received');
+	if(200 !== responseCode) {
+		res.status(responseCode).send(new Error(responseMessage));
+	} else {
+		res.status(responseCode).send(responseMessage);
+	}
 });
 
 /**

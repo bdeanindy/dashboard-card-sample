@@ -8,9 +8,18 @@ let schemaOptions = {
 };
 
 let UserSchema = new mongoose.Schema({
-    user_id: String,
+    weebly_user_id: String,
     email: String,
-    name: String,
+    prefix: String,
+    firstName: String,
+    lastName: String,
+    suffix: String,
+    phone: String,
+    streetAddress: String,
+    streetAddressOne: String,
+    cityTownVillage: String,
+    stateProvince: String,
+    country: String,
     language: String
 }, schemaOptions);
 
