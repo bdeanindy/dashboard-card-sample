@@ -6,7 +6,8 @@ const path = require('path');
 const needle = require('needle');
 const querystring = require('querystring');
 const HMAC_Util = require('../utils/hmac');
-const OAuth = require('../models/oauth');
+const AppController = require('../controllers/appController');
+//const OAuth = require('../models/oauth');
 
 // TODO: Simplify this by placing almost everything here into the OAuth Controller
 
@@ -53,19 +54,22 @@ router.get('/phase-one', function(req, res) {
 		redirectUrl += `&version=${req.query.version}`;
 	}
 
-	// TODO: Find existing installation first
-	OAuth.create({
+	AppController.install({
 		site_id: req.query.site_id,
 		user_id: req.query.user_id,
 		active: false,
 		version: req.query.version,
 		weebly_timestamp: req.query.timestamp
-	}, (err, record) => {
-		if(err) console.error(err);
-		//console.log('Saved OAuth Phase One: ', record);
+	})
+	.then((inactiveInstallation) => {
+		console.log(`Installation saved to database, but is inactive: ${inactiveInstallation}`);
+		res.redirect(redirectUrl);
+	})
+	.catch((e) => {
+		console.error(e);
+		throw e;
 	});
 
-	res.redirect(redirectUrl);
 });
 
 /**
@@ -79,14 +83,13 @@ router.get('/phase-two', function(req, res) {
 	const secretKey = req.app.secretKey;
 	let accessToken;
 
-    // we have our authorization code.
-    // now we make a request to exchange it for a token.
+    // we have our authorization code, now execute the request to exchange it for a token.
+	// TODO: Replace this with weebly module to handle auth
 	needle.post(req.query.callback_url, {
 		client_id: clientId,
 		client_secret: secretKey,
 		authorization_code: req.query.authorization_code
 	}, function(error, response) {
-		//console.log(`Inside needle callback`);
 		if (error) {
 			console.error(`\nPhase two failure: ${error}`);
 			return res.status(500).send('failed');
@@ -97,22 +100,19 @@ router.get('/phase-two', function(req, res) {
 		// we have the token. store this in the database (constitutes an app installation)
 		req.app.token = payload.access_token;
 
+		let activateQuery = { site_id: req.query.site_id, user_id: req.query.user_id, access_token: payload.access_token};
+
 		// Update the Installation in MongoDB
-		let oauthQuery = { site_id: req.query.site_id, user_id: req.query.user_id};
-		OAuth.findOneAndUpdate(oauthQuery, {token: payload.access_token, active: true})
-		.then((install) => {
-			console.log('We have a token!');
-			console.log('Install: ', install);
-			// TODO: Improvement Idea - Service Worker Thread to stub out the account/user/dashboard card/etc...
-			return install;
+		AppController.activate(activateQuery)
+		.then((installation) => {
+			console.log(`Installation activation stored to database: ${installation}`);
+			console.log(`Finalizing the App Authorization and Installation Flow, executing last redirect back to Weebly...`);
 		})
-		.catch((err) => {
-			console.error(err);
-			throw err;
+		.catch((e) => {
+			console.error(e);
+			throw e;
 		});
 
-		//console.log(`\nAccess token: ${payload.access_token}`);
-		//console.log(`\nPayload.callback_url: ${payload.callback_url}`);
 		res.redirect(payload.callback_url);
 	});
 });

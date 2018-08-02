@@ -6,7 +6,7 @@ const OAuth = require('../models/oauth');
  * App Installation Data
  */
 
-// Retrieve list of cards for the user/site
+// Retrieve list of installations (OAuths) for the user/site
 exports.list = async (params = {}) => {
     if(!params.user_id || !params.site_id) {
         let err = new Error('Missing required parameters');
@@ -22,30 +22,84 @@ exports.list = async (params = {}) => {
     }
 };
 
+// Retrieve an active installation (OAuths) for the user/site
+exports.getActiveInstallation = async (params = {}) => {
+    if(!params.user_id || !params.site_id) {
+        let err = new Error('Missing required parameters');
+        console.error(err);
+        return err;
+    }
+
+    try {
+        return await OAuth.find({user_id: params.user_id, site_id: params.site_id, active: true});
+    } catch(e) {
+        console.error(e);
+        throw e;
+    }
+};
+
+// Handle New App Installation
+exports.install = async (params = {}) => {
+    if(!params.user_id || !params.site_id) {
+        let err = new Error('Missing required parameters');
+        console.error(err);
+        return err;
+    }
+
+    try {
+        let installation = await OAuth.create({
+            site_id: params.site_id,
+            user_id: params.user_id,
+            active: false,
+            version: params.version,
+            weebly_timestamp: params.weebly_timestamp
+        });
+        return installation;
+    } catch(e) {
+        console.error(e);
+        throw e;
+    }
+};
+
+// Activate an App Installation
+exports.activate = async (params = {}) => {
+    if(!params.user_id || !params.site_id || !params.access_token) {
+        //console.log('activate params:', params);
+        let err = new TypeError('Missing one or more required arguments', 'appController.js', 52);
+        console.error(err);
+        return err;
+    }
+
+    try {
+        let query = {
+            user_id: params.user_id,
+            site_id: params.site_id
+        };
+
+        let updateData = {
+            token: params.access_token,
+            active: true
+        };
+        let activatedInstallation = await OAuth.findOneAndUpdate(query, updateData, {new: true});
+        return activatedInstallation;
+    } catch(e) {
+        console.error(e);
+        throw e;
+    }
+};
+
 // Delete a specific app
 exports.uninstall = async (params = {}) => {
-    /** Actual Event for Reference
-    {
-        "client_id": "1448453350",
-        "client_version": "2.0.0",
-        "event": "app.uninstall",
-        "timestamp": 1533000982,
-        "data": {
-            "user_id": "110864487",
-            "site_id": "369681026904144169",
-            "platform_app_id": "1448453350"
-        },
-        "hmac": "93b5794d63d3f451210f30d5f9443fc7b752a2d5e0d31e301860ed715d5f3a96"
+    // Make sure we have been provided all the necessary information to handle this properly
+    if(!params.data.user_id || !params.data.site_id && process.env.WEEBLY_CLIENT_ID !== params.data.platform_app_id) {
+        let uninstallErr = new Error('Missing one or more required parameters needed to delete an app');
+        console.error(uninstallErr);
+        return uninstallErr;
     }
-    **/
-    if(!params.data.user_id || !params.data.site_id) {
-        let myErr = new Error('Missing one or more required parameters needed to delete an app');
-        console.error(myErr);
-        return myErr;
-    }
+
     try {
-        // TODO COMPLETE THIS METHOD
-        return await OAuth.findOneAndUpdate({site_id: params.site_id, user_id: params.user_id}, {active: false});
+        let uninstalledApp = await OAuth.findOneAndUpdate({site_id: params.site_id, user_id: params.user_id}, {active: false});
+        return uninstalledApp;
     } catch(e) {
         console.error(e);
         throw e;

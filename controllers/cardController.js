@@ -118,17 +118,19 @@ exports.manage = async (params = {}) => {
 exports.configure = async (params = {}) => {
     // TODO: Improve this in the future to address any security risks/concerns
     if(!params.name || (!params.user_id && !params.site_id)) {
-        let myErr = new Error('Missing one or more required parameters');
-        console.error(myErr);
-        return myErr;
+        let paramErr = new Error('Missing one or more required parameters');
+        console.error(paramErr);
+        return paramErr;
     }
 
     // For all use cases:
     //  - Must have access to the DB
     //  - App must have been successfully installed, and a valid installation object existing in the DB.oauth collection
     try {
-        // Make sure we know whom we are dealing with (should not try to configure dbcards if we do not have an installation)
+        // Ensure you know with whom you're operating, no app installation (do not proceed).
         let installation = await OAuth.findOne({user_id: params.user_id, site_id: params.site_id})
+        if(!installation || !installation.active) throw new Error('Cannot proceed, no active app installation exists');
+
         let dbCard = await Card.findOne(params);
         let apiCard = await WeeblyCardAPI.getCardByName({site_id: params.site_id, name: params.name, token: installation.token});
         apiCard = JSON.parse(apiCard);
@@ -197,6 +199,7 @@ exports.configure = async (params = {}) => {
 exports.handleUpdateEvent = async (params = {}) => {
     // TODO: REFACTOR THIS
     if(!params.data || !params.name || !params.user_id && !params.site_id) {
+        console.log(`handleUpdateEvent params: ${params}`);
         let myErr = new Error('Missing one or more required parameters');
         console.error(myErr);
         return myErr;

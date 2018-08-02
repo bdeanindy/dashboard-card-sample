@@ -8,10 +8,23 @@ let schemaOptions = {
 };
 
 let OAuthSchema = new mongoose.Schema({
-    site_id: String,
-    user_id: String,
-    version: String,
-    active: Boolean,
+    site_id: {
+        type: String,
+        required: true
+    },
+    user_id: {
+        type: String,
+        required: true
+    },
+    version: {
+        type: String,
+        required: true
+    },
+    active: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
     token: String,
     weebly_timestamp: String,
 }, schemaOptions);

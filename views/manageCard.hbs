@@ -9,7 +9,6 @@
                 <label for="cardId">Card ID: <input id="cardId" disabled type="text" value="{{card.card_id}}" /></label>
                 <label for="userId">User ID: <input id="userId" disabled type="text" value="{{card.user_id}}" /></label>
                 <label for="siteId">Site ID: <input id="siteId" disabled type="text" value="{{card.site_id}}" /></label>
-                <label for="currentCount">Current Count: <input id="currentCount" disabled type="text" value="{{card.count}}" /></label>
                 <hr />
                 <div style="border: 1px solid #ccc; padding: 3%;">
                     <h2>Raw Card Data</h2>
@@ -23,7 +22,7 @@
             </section>
         </section>
     </div>
-    <div class="row align-items-center" id="loading">
+    <div class="row align-items-center hidden" id="loading">
         <div class="col-md-6 offset-md-3"> 
             <img src="/images/loading.gif" border="0" />
         </div>

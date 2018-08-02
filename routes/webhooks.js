@@ -46,8 +46,8 @@ const isValidWebhookRequest = (params = {}) => {
  */
 router.post('/callback', (req, res, next) => {
 	console.log(`POST request received at ${req.path}\n`);
-	console.log(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
-	console.log(`Data: ${JSON.stringify(req.body, null, 2)}`);
+	//console.log(`Headers: ${JSON.stringify(req.headers, null, 2)}`);
+	//console.log(`Data: ${JSON.stringify(req.body, null, 2)}`);
 	let responseCode = 200;
 	let responseMessage = 'Successfully received';
 
@@ -74,6 +74,8 @@ router.post('/callback', (req, res, next) => {
 		if(err) {
 			console.error(err);
 			res.status(500).send(new Error('Unable to save new event'));
+		} else {
+			console.log(`Event saved to MongoDB: ${savedEvent}`);
 		}
 	});
 
@@ -82,30 +84,16 @@ router.post('/callback', (req, res, next) => {
 
 	// Handle `dasboard.card.update` events
 	if('dashboard.card.update' === req.body['event']) {
-		console.log('New Dashboard Card Update Event...');
+		console.log(`New Dashboard Card Update Event received: ${req.body}`);
 		// Send this request to cardController for handling
 		CardController.handleUpdateEvent(req.body);
 	}
 
 	// Handle `app.uninstall` events
 	if('app.uninstall' === req.body['event']) {
-		console.log('App has been uninstalled, remove card from the DB');
+		//console.log('App has been uninstalled, remove card from the DB');
 		// Send this request to appController for handling
-		AppController.handleUninstallEvent(req.body);
-		/** Event.data for Reference
-		{
-			"client_id": "XXXXXXXXXX",
-			"client_version": "2.0.0",
-			"event": "app.uninstall",
-			"timestamp": 1533000982,
-			"data": {
-				"user_id": "XXXXXXXXX",
-				"site_id": "XXXXXXXXXXXXXXXXXX",
-				"platform_app_id": "XXXXXXXXXX"
-			},
-			"hmac": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-		}
-		**/
+		AppController.uninstall(req.body);
 	}
 
 	if('user.update' === req.body['event']) {

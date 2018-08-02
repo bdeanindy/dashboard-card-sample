@@ -3,8 +3,8 @@ $(document).ready(function() {
 
     /*** Handle Editor/Publish Buttons to Weebly ***/
     /*
-    let $editorButton = $('#editorButton');
-    let $publishButton = $('#publishButton');
+    var $editorButton = $('#editorButton');
+    var $publishButton = $('#publishButton');
 
     if( $editorButton ) {
         $editorButton.on('click', function(evt) {
@@ -22,7 +22,7 @@ $(document).ready(function() {
 
     window.addEventListener('message', receiveMessage, false);
 
-    let receiveMessage = (evt) => {
+    var receiveMessage = (evt) => {
         if( event.origin !== 'https://www.weebly.com') return;
         console.log( 'Origin: ', evt.origin ); // Origin of the window that sent the message at the time `postMessage` was called.
         console.log( 'Data: ', evt.data ); // The object passed from the other window
@@ -33,23 +33,24 @@ $(document).ready(function() {
     // LOADING ICON SHOWN BY DEFAULT, `appData` HIDDEN BY DEFAULT
 
     // Handle proxying the bump in DBCard Counter
-    let $configureBtn = $('button#configureCard');
+    var $configureBtn = $('button#configureCard');
 
     $configureBtn.on('click', function(evt) {
         // TODO Hide/Show as appropriate
-        let $appData = $('#appData');
-        let loadingIcon = $('#loading');
-        let $siteId = $('#configureCard').data('siteId');
-        let $userId = $('#configureCard').data('userId');
+        var $appData        = $('#appData');
+        var loadingIcon     = $('#loading');
+        var $siteId         = $('#configureCard').data('siteId');
+        var $userId         = $('#configureCard').data('userId');
 
-        let jqxhr = $.post('/cards/configure/helloworld', {site_id: $siteId, user_id: $userId}), function(response) {
+        var jqxhr = $.post('/cards/configure/helloworld', {site_id: $siteId, user_id: $userId}, function(response) {
             console.log(response);
+        }, "json")
+        .done(function(data) {
+            console.log('Done processing the AJAX request to configure the Dashboard Card:', data);
         })
-        .fail(function() {
-            console.log(response);
-        })
-        .always(function() {
-            alert('Final step of AJAX request cycle, all done now');
+        .fail(function(err) {
+            console.log(err);
+            // TODO: Update the UI to inform the user there was a problem trying to configure the dashboard card
         });
     });
 

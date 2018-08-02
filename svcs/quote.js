@@ -12,7 +12,7 @@ exports.getQuote = (options) => {
         let endpoint = `${apiBaseUrl}/api/quotes/random/`;
         let requestOptions = {
             method: `GET`,
-            url: cardEndpoint,
+            url: endpoint,
             headers: {
                 'Accept': 'application/json'
             }
