@@ -66,10 +66,9 @@ router.post('/callback', (req, res, next) => {
 		hmac: req.body.hmac
 	};
 
-	// TODO: Replace this with eventController.js in the future
-	// Instantiate /models/event.js
+	// Create New Event Object for the DB
 	let newEvent = new Event(newEventData);
-	// Save the event in the DB
+	// Save event to the DB
 	newEvent.save((err, savedEvent) => {
 		if(err) {
 			console.error(err);
@@ -80,20 +79,34 @@ router.post('/callback', (req, res, next) => {
 	});
 
 
-	// TODO - Implement Mongoose Middleware POST Hooks to kickoff the right actions instead of doing this below...
+	// TODO - Improve by implementing Mongoose Middleware POST Hooks to kickoff the right actions instead of doing this below...
 
 	// Handle `dasboard.card.update` events
 	if('dashboard.card.update' === req.body['event']) {
 		console.log(`New Dashboard Card Update Event received: ${req.body}`);
 		// Send this request to cardController for handling
-		CardController.handleUpdateEvent(req.body);
+		CardController.handleUpdateEvent(req.body)
+		.then((updatedCard) => {
+			console.log('Updated after `dashboard.card.update` event received: ', updatedCard);
+		})
+		.catch((e) => {
+			console.error(e);
+			throw e;
+		});
 	}
 
 	// Handle `app.uninstall` events
 	if('app.uninstall' === req.body['event']) {
 		//console.log('App has been uninstalled, remove card from the DB');
 		// Send this request to appController for handling
-		AppController.uninstall(req.body);
+		AppController.uninstall(req.body)
+		.then((uninstalledApp) => {
+			console.log('Uninstalled App: ', uninstalledApp);
+		})
+		.catch((e) => {
+			console.error(e);
+			throw e;
+		});
 	}
 
 	if('user.update' === req.body['event']) {
@@ -101,7 +114,7 @@ router.post('/callback', (req, res, next) => {
 		UserController.handleUpdateEvent(req.body);
 	}
 
-	// We don't want a bunch of retries, so respond positively to all events without errors
+	// TODO: Improve this by using a proper retry-logic at a later time, but for now, always respond positively to prevent retries
 	if(200 !== responseCode) {
 		res.status(responseCode).send(new Error(responseMessage));
 	} else {

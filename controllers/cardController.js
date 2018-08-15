@@ -117,6 +117,7 @@ exports.manage = async (params = {}) => {
 // Configure card in MongoDB and Update Weebly Card API
 exports.configure = async (params = {}) => {
     // TODO: Improve this in the future to address any security risks/concerns
+    // TODO: Improve this by using workers???
     if(!params.name && !params.user_id && !params.site_id) {
         let paramErr = new Error('Missing one or more required parameters');
         console.error(paramErr);
@@ -131,73 +132,58 @@ exports.configure = async (params = {}) => {
         let installation = await OAuth.findOne({user_id: params.user_id, site_id: params.site_id})
         if(!installation || !installation.active) throw new Error('Cannot proceed, no active app installation exists');
 
-        let dbCard = await Card.findOne(params);
         let apiCard = await WeeblyCardAPI.getCardByName({site_id: params.site_id, name: params.name, token: installation.token});
         apiCard = JSON.parse(apiCard);
 
         // TODO: Hide before publishing or convert to use `logger.js`
         console.log('Installation: ', installation);
-        console.log('Mongo DB Card: ', dbCard);
         console.log('Weebly API Card: ', apiCard);
-
-        // Stub configured card components
-        let configuredTextComponent = {
-            type: 'text',
-            value: "This dashboard card is now configured with a `text` component!"
-        };
-        let quoteTextComponent = {
-            type: 'text'
-        };
-
-
-        // Prepare Configured Card Component Data
-        let cardData = [];
-        // Retrieve a random quote to populate the second text component
-        let quote = await QuoteAPI.getQuote();
-        // Format the random quote for Dashboard Card display and append to respective text component
-        quoteTextComponent.value = `<strong>&ldquo;</strong>${quote.quote}<strong>&rdquo;</strong><br /><em>&mdash; ${quote.author} &mdash; Category: ${quote.cat}</em><p>Quote data courtesty of: <a href="https://talaikis.com/random_quotes_api/" title="Random Quotes API">Random Quotes API</a></p>`;
-        // Append two text components to the updated Card Data: configured text component, Quote component. Later, on `dashboard.card.update` events, we will only ever update the Quote text component
-        cardData.push(configuredTextComponent);
-        cardData.push(quoteTextComponent);
-        cardData = JSON.stringify(cardData);
 
         // Ensure API Card data has not already been configured (sanity check)
         let dataInApiCard = JSON.parse(apiCard.data);
         let cardDataType = dataInApiCard[0][0].type;
         if('welcome' !== cardDataType) {
             console.error(`Ummm...fix your client side code, should NOT expose the 'configure' route in already configured dashboard cards`);
-            return new Error(`Invalid request, cannot configure already configured dashboard cards`);
+            throw new Error(`Invalid request, cannot configure already configured dashboard cards`);
         }
 
+        // Configured card text components
+        let configuredTextComponent = {
+            type: 'text',
+            value: "This dashboard card is now configured with a `text` component!"
+        };
+        // Stub quote text component
+        let quoteTextComponent = {
+            type: 'text'
+        };
+
+        // Prepare Configured Card Component Data
+        let cardData = [];
+        // Retrieve random quote to populate second text component
+        let quote = await QuoteAPI.getQuote();
+        quote = JSON.parse(quote);
+        // Format quote for Dashboard Card display
+        quoteTextComponent.value = `<strong>&ldquo;</strong>${quote.quote}<strong>&rdquo;</strong><br /><em>&mdash; ${quote.author} &mdash; Category: ${quote.cat}</em><p>Quote data courtesty of: <a href="https://talaikis.com/random_quotes_api/" title="Random Quotes API">Random Quotes API</a></p>`;
+        // Append two new text components to the updated Card Data: configured text component, Quote component. Later, on `dashboard.card.update` events, we will only ever update the Quote text component
+        cardData.push(configuredTextComponent);
+        cardData.push(quoteTextComponent);
+        cardData = JSON.stringify(cardData);
+
         // First, update the Card in the Weebly API Card to use the new data
-        /*
-            if(!options.card_id || !options.token || !options.site_id || !options.data) {
-        */
         let updatedApiCard = await WeeblyCardAPI.updateCard({site_id: params.site_id, token: installation.token, card_id: apiCard.card_id, data: cardData});
         console.log(`Updated API Card: ${updatedApiCard}`);
 
         // Upsert the card in MongoDB
-        /*
-            {
-                "_id": ObjectId("5b6b6757da6db4f0f3a0c93f"),
-                "hidden": false,
-                "version": "2.0.0",
-                "language": "en-us",
-                "count": 0,
-                "configured": false,
-                "active": true,
-                "data": ["[[{\"type\":\"welcome\",\"headline\":\"Hello World!\",\"text\":\"Setup your Hello World Dashboard Card in one easy step!\",\"action_label\":\"Get Started\",\"action_link\":\"https:\\/\\/weebly.apihacker.com\\/cards\\/manage\\/helloworld\\/:jwt\"}]]"],
-                "card_id": "900749780762366038",
-                "name": "helloworld",
-                "user_id": "110864487",
-                "site_id": "369681026904144169",
-                "createdAt": ISODate("2018-08-08T21:57:43.263Z"),
-                "updatedAt": ISODate("2018-08-08T21:57:43.263Z"),
-                "__v": 0
-            }
-        */
-        let upsertDBCard = await Card.findOneAndUpdate({user_id: params.user_id, site_id: params.site_id, name: params.name, token: installation.token, card_id: apiCard.card_id}, {data: cardData, configured: true}, {upsert: true});
-        console.log(`Upserted DB Card: ${upsertDBCard}`);
+        let updatedDBCard = await Card.findOneAndUpdate({card_id: apiCard.card_id}, {data: cardData, configured: true}, {new: true});
+        console.log(`Updated DB Card: ${updatedDBCard}`);
+        
+        /**
+        ONLY FOR DEBUGGING PURPOSES TO SEE IF WE ARE ACTUALLY UPDATING THE CARD DATA VIA THE API
+            let apiCard2 = await WeeblyCardAPI.getCardByName({site_id: params.site_id, name: params.name, token: installation.token});
+            apiCard2 = JSON.parse(apiCard2);
+            console.log('Weebly API Card (2): ', apiCard2);
+        END OF DEBUGGING
+        **/
 
         return updatedDBCard;
 
@@ -209,43 +195,59 @@ exports.configure = async (params = {}) => {
 
 // Update a specific card
 exports.handleUpdateEvent = async (params = {}) => {
-    // TODO: REFACTOR THIS
-    if(!params.data || !params.name || !params.user_id && !params.site_id) {
-        console.log(`handleUpdateEvent params: ${params}`);
-        let myErr = new Error('Missing one or more required parameters');
-        console.error(myErr);
-        return myErr;
-    }
-
     try {
-        // params.user_id and params.site_id are always required
+        // Input check
+        if(!params.name && !params.user_id && !params.site_id && !params.data) {
+            console.log(`handleUpdateEvent params: ${params}`);
+            let myErr = new Error('Missing one or more required parameters');
+            console.error(myErr);
+            return myErr;
+        }
+
+        // Sanity check
+        if(req.app.client_id !== !params.data.platform_app_id) {
+            let appIdMistmatchError = new Error('Missing one or more required parameters');
+            console.error(appIdMismatchError);
+            return appIdMismatchError;
+        }
+
+        // Prepare the Mongo Query
         let query = {
-            user_id: params.user_id,
-            site_id: params.site_id,
-            name: params.name
+            user_id: params.data.user_id,
+            site_id: params.data.site_id
         };
 
-        // Get auth information for this event
-        OAuth.findOne({user_id: params.user_id, site_id: params.site_id})
-        .then((auth) => {
-            console.log('Using auth: ', auth);
-            // Expects an object with: site_id, token, data to complete the update operation via the Weebly API
-            let cardFromApi = WeeblyCardAPI.updateCard({site_id: params.site_id, token: auth.token, data: params.data});
-            return cardFromApi;
-        })
-        .then((cardFromApiResponse) => {
-            // Should include the following properties: card_id, name, hidden, card_data (or data docs are inconsistent)
-            let calculatedCount = cardFromApiResponse.data[0].primary_value;
-            Card.findAndModify(query, {data: cardFromApiResponse.data, count: calculatedCount})
-            .then((apicard) => {
-                console.log('Card from API: ', apiCard);
-                return apiCard;
-            });
-        })
-        .catch((e) => {
-            console.error(e);
-            throw e;
-        });
+        let installation = await OAuth.findOne(query);
+
+        // Prepare request data for Card API
+        query.token = installation.token;
+        // Configured card text components
+        let configuredTextComponent = {
+            type: 'text',
+            value: "This dashboard card is now configured with a `text` component!"
+        };
+        // Stub quote text component
+        let quoteTextComponent = {
+            type: 'text'
+        };
+        // Prepare Configured Card Component Data
+        let cardData = [];
+        // Retrieve random quote to populate second text component
+        let quote = await QuoteAPI.getQuote();
+        quote = JSON.parse(quote);
+        // Format quote for Dashboard Card display
+        quoteTextComponent.value = `<strong>&ldquo;</strong>${quote.quote}<strong>&rdquo;</strong><br /><em>&mdash; ${quote.author} &mdash; Category: ${quote.cat}</em><p>Quote data courtesty of: <a href="https://talaikis.com/random_quotes_api/" title="Random Quotes API">Random Quotes API</a></p>`;
+        // Append two new text components to the updated Card Data: configured text component, Quote component. Later, on `dashboard.card.update` events, we will only ever update the Quote text component
+        cardData.push(configuredTextComponent);
+        cardData.push(quoteTextComponent);
+        cardData = JSON.stringify(cardData);
+
+        // Update Weebly Card API data
+        let cardFromApi = await WeeblyCardAPI.updateCard(query, {data: cardData});
+        // Update Mongo DB data for this Card
+        let dbCard = await Card.findOneAndUpdate({card_id: params.data.platform_dashboard_card_id}, {data: cardData}, {new: true});
+
+        return dbCard;
     } catch(e) {
         console.error(e);
         throw e;
@@ -261,6 +263,8 @@ exports.remove = async (params) => {
     }
     try {
         // TODO COMPLETE THIS METHOD
+        console.log('controller/cardController.js -> remove handler was called with these arguments: ', params);
+        console.log('TODO: COMPLETE `remove` handler');
     } catch(e) {
         console.error(e);
         throw e;

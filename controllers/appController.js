@@ -1,6 +1,8 @@
 "use strict";
 
 const OAuth = require('../models/oauth');
+const Card = require('../models/card');
+const WeeblyCardAPI = require('../weebly/card');
 
 /**
  * App Installation Data
@@ -92,13 +94,20 @@ exports.activate = async (params = {}) => {
 exports.uninstall = async (params = {}) => {
     // Make sure we have been provided all the necessary information to handle this properly
     if(!params.data.user_id || !params.data.site_id && process.env.WEEBLY_CLIENT_ID !== params.data.platform_app_id) {
-        let uninstallErr = new Error('Missing one or more required parameters needed to delete an app');
+        let uninstallErr = new Error('Invalid payload, cannnot proceed');
         console.error(uninstallErr);
         return uninstallErr;
     }
 
     try {
-        let uninstalledApp = await OAuth.findOneAndUpdate({site_id: params.site_id, user_id: params.user_id}, {active: false});
+        let query = {
+            site_id: params.site_id,
+            user_id: params.user_id
+        };
+        let uninstalledApp = await OAuth.findOneAndUpdate(query, {active: false}, {new: true});
+        let deactivateCard = await Card.findOneAndUpdate(query, {active: false}, {new: true});
+        // TODO: Hide card from Weebly Home (shouldn't be necessary, but just in case)
+        // let hiddenCard = await WeeblyCardAPI.hideCard(query);
         return uninstalledApp;
     } catch(e) {
         console.error(e);

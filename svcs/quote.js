@@ -23,7 +23,7 @@ exports.getQuote = (options) => {
                 console.error(err);
                 return reject(err);
             } else {
-                console.log('getList response body: ', body);
+                console.log('getQuote response body: ', body);
                 resolve(body);
             }
         });

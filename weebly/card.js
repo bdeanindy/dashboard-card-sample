@@ -87,7 +87,7 @@ exports.getCardByName = (options) => {
 
 exports.updateCard = (options = {}) => {
     return new Promise((resolve, reject) => {
-        // TODO Improve this by using destructuring and spread params???
+        // TODO: Improve this by using destructuring and spread params???
         console.log('Weebly Card API Request Data: ', options);
         if(!options.card_id || !options.token || !options.site_id || !options.data) {
             let updateErr = new Error('Missing one or more required arguments to weebly/card.update()');
@@ -103,6 +103,7 @@ exports.updateCard = (options = {}) => {
                     'Accept': 'application/vnd.weebly.v1+json',
                     'X-Weebly-Access-Token': options.token
                 },
+                card_data: options.data,
                 data: options.data
             },
             function(err, response, body) {
@@ -110,7 +111,7 @@ exports.updateCard = (options = {}) => {
                     console.error(err);
                     return reject(err, body);
                 } else {
-                    console.log('update response body: ', body);
+                    console.log('Weebly Card API -> Update -> Response Body: ', body);
                     resolve(body);
                 }
             }
