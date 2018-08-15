@@ -54,6 +54,8 @@ router.get('/phase-one', function(req, res) {
 		redirectUrl += `&version=${req.query.version}`;
 	}
 
+	console.log(`Phase One Redirect URI constructed from callback_url query parameter: ${redirectUrl}`);
+
 	AppController.install({
 		site_id: req.query.site_id,
 		user_id: req.query.user_id,

@@ -117,7 +117,7 @@ exports.manage = async (params = {}) => {
 // Configure card in MongoDB and Update Weebly Card API
 exports.configure = async (params = {}) => {
     // TODO: Improve this in the future to address any security risks/concerns
-    if(!params.name || (!params.user_id && !params.site_id)) {
+    if(!params.name && !params.user_id && !params.site_id) {
         let paramErr = new Error('Missing one or more required parameters');
         console.error(paramErr);
         return paramErr;
@@ -137,8 +137,8 @@ exports.configure = async (params = {}) => {
 
         // TODO: Hide before publishing or convert to use `logger.js`
         console.log('Installation: ', installation);
-        console.log('DB Card: ', dbCard);
-        console.log('Data from the API Card: ', apiCard);
+        console.log('Mongo DB Card: ', dbCard);
+        console.log('Weebly API Card: ', apiCard);
 
         // Stub configured card components
         let configuredTextComponent = {
@@ -156,36 +156,48 @@ exports.configure = async (params = {}) => {
         let quote = await QuoteAPI.getQuote();
         // Format the random quote for Dashboard Card display and append to respective text component
         quoteTextComponent.value = `<strong>&ldquo;</strong>${quote.quote}<strong>&rdquo;</strong><br /><em>&mdash; ${quote.author} &mdash; Category: ${quote.cat}</em><p>Quote data courtesty of: <a href="https://talaikis.com/random_quotes_api/" title="Random Quotes API">Random Quotes API</a></p>`;
-        console.log(`New Quote: ${quoteTextComponent.value}`);
         // Append two text components to the updated Card Data: configured text component, Quote component. Later, on `dashboard.card.update` events, we will only ever update the Quote text component
         cardData.push(configuredTextComponent);
         cardData.push(quoteTextComponent);
+        cardData = JSON.stringify(cardData);
 
-        // Make sure the API Card data has not been configured (sanity check)
-        if('welcome' !== apiCard.data[0].type) {
+        // Ensure API Card data has not already been configured (sanity check)
+        let dataInApiCard = JSON.parse(apiCard.data);
+        let cardDataType = dataInApiCard[0][0].type;
+        if('welcome' !== cardDataType) {
             console.error(`Ummm...fix your client side code, should NOT expose the 'configure' route in already configured dashboard cards`);
-            throw new Error(`Invalid request, cannot configure already configured dashboard cards`);
+            return new Error(`Invalid request, cannot configure already configured dashboard cards`);
         }
 
-        // Update the database (of course, if you too are using MongoDB and Mongoose, you could instead add this as methods to the model, to simplify your business logic in the controller)
-        // Create card in MongoDB if it does not exist
-        let updatedDBCard = (dbCard.card_id)
-            ? await Card.findOneAndUpdate(dbCard, {data: cardData, configured: true}, {new: true})
-            : await Card.create({
-                user_id: params.user_id,
-                site_id: params.site_id,
-                name: params.name,
-                token: req.app.token,
-                card_id: apiCard.card_id,
-                data: cardData,
-                configured: true
-            })
-            ;
-        console.log(`Update DB Card: ${updatedDBCard}`);
-
-        // Update the Card in the Weebly API Card to use the new data now that we've saved it
-        let updatedApiCard = await WeeblyCardAPI.updateCard({token: installation.token, card_id: apiCard.card_id, data: cardData})
+        // First, update the Card in the Weebly API Card to use the new data
+        /*
+            if(!options.card_id || !options.token || !options.site_id || !options.data) {
+        */
+        let updatedApiCard = await WeeblyCardAPI.updateCard({site_id: params.site_id, token: installation.token, card_id: apiCard.card_id, data: cardData});
         console.log(`Updated API Card: ${updatedApiCard}`);
+
+        // Upsert the card in MongoDB
+        /*
+            {
+                "_id": ObjectId("5b6b6757da6db4f0f3a0c93f"),
+                "hidden": false,
+                "version": "2.0.0",
+                "language": "en-us",
+                "count": 0,
+                "configured": false,
+                "active": true,
+                "data": ["[[{\"type\":\"welcome\",\"headline\":\"Hello World!\",\"text\":\"Setup your Hello World Dashboard Card in one easy step!\",\"action_label\":\"Get Started\",\"action_link\":\"https:\\/\\/weebly.apihacker.com\\/cards\\/manage\\/helloworld\\/:jwt\"}]]"],
+                "card_id": "900749780762366038",
+                "name": "helloworld",
+                "user_id": "110864487",
+                "site_id": "369681026904144169",
+                "createdAt": ISODate("2018-08-08T21:57:43.263Z"),
+                "updatedAt": ISODate("2018-08-08T21:57:43.263Z"),
+                "__v": 0
+            }
+        */
+        let upsertDBCard = await Card.findOneAndUpdate({user_id: params.user_id, site_id: params.site_id, name: params.name, token: installation.token, card_id: apiCard.card_id}, {data: cardData, configured: true}, {upsert: true});
+        console.log(`Upserted DB Card: ${upsertDBCard}`);
 
         return updatedDBCard;
 

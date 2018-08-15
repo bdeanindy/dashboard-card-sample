@@ -86,13 +86,14 @@ exports.getCardByName = (options) => {
 };
 
 exports.updateCard = (options = {}) => {
-    // TODO Improve this by using destructuring and spread params???
-    if(!options.card_id || !options.token || !options.site_id || !options.data) {
-        let updateErr = new Error('Missing one or more required arguments to weebly/card.update()');
-        console.error(updateErr);
-        throw updateErr;
-    }
     return new Promise((resolve, reject) => {
+        // TODO Improve this by using destructuring and spread params???
+        console.log('Weebly Card API Request Data: ', options);
+        if(!options.card_id || !options.token || !options.site_id || !options.data) {
+            let updateErr = new Error('Missing one or more required arguments to weebly/card.update()');
+            console.error(updateErr);
+            reject(updateErr);
+        }
         let cardEndpoint = `${weeblyApiBaseUrl}/user/sites/${options.site_id}/cards/${options.card_id}`;
         request({
                 method: `PATCH`,

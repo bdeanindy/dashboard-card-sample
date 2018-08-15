@@ -49,11 +49,6 @@ let CardSchema = new mongoose.Schema({
         required: true,
         default: 'en-us'
     },
-    count: {
-        type: Number,
-        default: 0,
-        min: 0 
-    },
     configured: {
         type: Boolean,
         default: false
